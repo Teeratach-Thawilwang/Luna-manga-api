@@ -1,0 +1,15 @@
+services:
+  app:
+    image: django_app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/data
+    ports:
+      - ${APP_PORT}
+    deploy:
+      mode: replicated
+      replicas: 1
+    restart: unless-stopped
+    command: sh -c "uwsgi --ini ../nginx/uwsgi.ini"

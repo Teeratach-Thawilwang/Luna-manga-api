@@ -1,0 +1,11 @@
+﻿1. เมื่อ start container database ขึ้นมา จะได้ database เปล่าๆ ไม่มีตารางใดๆ
+    ให้ทำการรันคำสั่งต่อไปนี้ เพื่อสร้างตารางจาก migration file
+
+    - ให้ comment "scheduler().handle()" ในไฟล์ main/app/apps.py.
+    - ใช้ 2 คำสั่งนี้ สร้างตาราง
+    -> docker-compose exec app python manage.py makemigrations app
+    -> docker-compose exec app python manage.py migrate
+    - นำ comment ที่บรรทัด scheduler().handle() ออก
+
+2. Seed initial data
+    -> docker-compose exec app python manage.py Seeds initial

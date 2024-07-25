@@ -1,0 +1,28 @@
+Ref : https://django-q.readthedocs.io/en/latest/index.html
+
+- Configuration
+    - name : ชื่อของกลุ่มคิว,
+    - workers : จำนวน worker ที่จะทำงานบนคิวนี้ ควรกำหนดตามจำนวน CPU ที่มีพอจะเอามาใช้กับ background-process ได้
+    - recycle : จำนวนงานที่ worker จะทำก่อนจะทำลายตัวเองเเล้วสร้างใหม่ เพื่อคืน resource ที่สะสมจากงานที่ทำ
+    - timeout : ระยะเวลาที่ worker จะทำงาน ถ้าเวลาเกินจะทิ้งงานนั้นไป default=None
+    - ack_failures : เมื่อ set เป็น True ถ้าเกิดงานล้มเหลว จะถือว่างานนั้นยังคงสำเร็จ และดึงออกจาก queue ไปเลย
+    - max_attempts : จำนวนครั้งที่จะนำงานที่ล้มเหลวมาทำอีกครั้ง default=0 คือ จะทำไปเรื่อยๆ ไม่มีกำหนดหยุด
+    - retry : เวลาที่ broker จะรอให้ worker ทำงานสำเร็จ ถ้าไม่สำเร็จในเวลาที่กำหนดหรือเกิด failed job จะทำการ retry เช่น retry=10 สมมุติว่า failed job ทุกครั้ง จะเกิดการ retry ที่เวลา 0, 10, 20, ...
+
+- Queue
+    - Example usage => main/app/Notifications/EmailNotification.py
+    - Example
+        options = {
+            "task_name": "Send mail", 
+            "group": QueueGroupEnum.SEND_MAIL,
+            "hook":"app.Services.EmailService.onHook", 
+        }
+        - async_task("app.Services.EmailService.sendMail", customer, q_options=options)
+
+- Schedule
+    - Example usage => main/app/Schedules.Schedules.py
+    - ถ้าต้องการเพิ่ม Schedule ให้เพิ่มใน method register
+        def register(self):
+            return {
+                "app.Jobs.ExampleJob.handle": {"cron": "10 * * * *", "name": "Example schedule job"},
+            }

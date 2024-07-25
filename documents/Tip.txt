@@ -1,0 +1,42 @@
+1. install python 3.10.3 ผ่าน
+2. python -m venv venv
+3. on windows cmd -> venv\Scripts\activate.bat
+   on window powershell -> venv\Scripts\activate.ps1   // "Set-ExecutionPolicy Unrestricted -Force" on powershell as administrator
+4. python -m pip install --upgrade pip
+5. pip install django
+   pip install djangorestframework
+   cd demo && pip install -r requirements.txt // ใช้ตอนมี requirements.txt
+
+6. django-admin startproject setting
+7. cd setting
+8. python manage.py startapp app
+
+
+
+# รวมคำสั่งใช้บ่อย
+   pip freeze > ../requirements.txt
+   pip freeze > requirements.txt
+   venv\Scripts\activate.bat
+   venv\Scripts\deactivate.bat
+
+   python manage.py makemigrations
+   python manage.py migrate
+
+   python manage.py createsuperuser
+   python manage.py runserver
+
+   // restart container
+   docker-compose restart app
+
+
+# รัน test แบบหยุดทันทีเมื่อเจอ test failed
+   python manage.py test --failfast
+
+
+# รันทดสอบ simple webserver ไว้ใช้ test กับ load balance
+   python -m http.server 9000
+
+# เมื่อ set APP_ENV=test จำเป็นต้องใช้ database ในการเก็บ cache
+# ให้รันคำสั่งเพื่อสร้าง cache table ก่อน
+   python manage.py createcachetable
+# กรณีใช้ redis server เก็บ cache ไม่จำเป็นต้องรันสร้าง cache table

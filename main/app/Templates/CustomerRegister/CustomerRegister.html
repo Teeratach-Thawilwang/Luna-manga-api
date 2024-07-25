@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {{ css|safe }}
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h2>ยินดีต้อนรับสู่ Luna Manga</h2>
+    </header>
+    <section class="welcome-section">
+      <br>
+      <p>เรียนคุณ <b>{{first_name}} {{last_name}}</b>,</p>
+      <br>
+      <p>ขอขอบคุณที่ลงทะเบียนกับ Luna Manga เราหวังเป็นอย่างยิ่งว่าคุณจะได้รับประสบการณ์ที่ดีในการใช้งานเว็ปไซต์ของเรา</p>
+      <p>เพื่อลงทะเบียนให้สมบูรณ์โปรดยืนยัน Email</p>
+      <div class="confirm-button-container"><a href="http://{{ confirm_link }}" class="confirm-button">ยืนยันอีเมล</a></div>
+    </section>
+    <footer>
+      <p>&copy; 2023 luna-manga.com All rights reserved.</p>
+    </footer>
+  </div>
+</body>
+
+</html>

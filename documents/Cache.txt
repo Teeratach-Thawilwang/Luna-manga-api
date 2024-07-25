@@ -1,0 +1,16 @@
+- เชื่อมต่อ Redis server
+  - เปิด container ที่รัน redis server
+    Ex => docker-compose exec redis bash
+  - ใช้คำสั่ง redis-cli -h your_redis_host -p your_redis_port -a your_password
+    Ex => redis-cli -h redis -p 6379 -a password
+
+- SET Cache
+  from django.core.cache import cache
+  from datetime import timedelta
+
+  timeout = timedelta(days=1).total_seconds()
+  cache.set("customer_register_css", contents, timeout=timeout)
+
+- GET Cache
+  from django.core.cache import cache
+  cache.get('customer_register_css')

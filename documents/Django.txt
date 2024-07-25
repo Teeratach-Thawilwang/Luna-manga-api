@@ -1,0 +1,439 @@
+### Roll-back โดยระบุ migration file สุดท้ายที่จะโดน migrate
+    docker-compose exec app python manage.py migrate <app_name> <migration_file_to_use_when_rollback>
+
+
+### Roll-back all migration
+    docker-compose exec app python manage.py migrate <app_name> zero
+
+
+### Squashed Migratoin file
+    docker-compose exec app python manage.py squashmigrations <app_name> <migration_file_from_0001_to_this_file_will_be_squashed>
+    
+    จากนั้นเปลี่ยนชื่อ migration file ที่ได้เป็น 0001_initial.py เเล้วรันคำสั่ง
+    docker-compose exec app python manage.py makemigrations <app_name>
+    docker-compose exec app python manage.py migrate
+
+
+### Foreign Key จะอยู่ในฝั่งที่ต้องการมีข้อมูลของอีกตารางหนึ่ง
+    เช่น User กับ Address   => user_id จะอยู่ฝั่งตาราง Address เพราะ User ไม่จำเป็นต้องมี Address ก็ได้
+        Customer กับ Order => Customer_id อยู่ฝั่ง Order เพราะ Customer ไม่ต้องมี Order ก็ได้ แต่ Order เกิดได้จาก Customer ซักคนแน่ๆ
+    
+    นอกจากนี้ Foreign Key จะอยู่ฝั่งที่เป็น Many ในความสัมพัธ์แบบ 1 to many เช่นเดียวกับ Customer มีได้หลาย Order
+
+
+### การเชื่อมตารางแบบ 1 to 1
+    User - UserProfile
+
+    class User(models.Model):
+        pass
+
+    class UserProfile(models.Model):
+        user = models.OneToOneField(User, on_delete=models.CASCADE)
+        name = models.CharField(max_length=100)
+
+    การเข้าถึงตารางอื่น สามารถใช้ชื่อตารางพิมพ์เล็กได้เลย
+    user = User.objects.get(userprofile__id=1)
+    profile = user.userprofile
+    หรือ
+    profile = UserProfile.objects.get(id=1)
+    user = profile.user
+
+
+### การเชื่อมตารางแบบ 1 to many
+    Foreign Key จะอยู่ฝั่งที่เป็น Many ในความสัมพัธ์แบบ 1 to many เช่นเดียวกับ Customer สร้างได้หลาย Story
+    
+    Customer - Story
+
+    class Customer(models.Model):
+        name = models.CharField(max_length=100)
+
+    class Story(models.Model):
+        customer = models.ForeignKey('Customer', on_delete=models.CASCADE)
+        title = models.CharField(max_length=100)
+    
+    เมื่อมี Customer อยากเข้าถึง Story
+    customers = Customer.objects.prefetch_related('story').filter(story__title__startswith='dragonball').distinct()
+    story = customers[0].story_set.first()
+    storyName = story.title
+
+    เมื่อมี Story อยากเข้าถึง Customer
+    story = Story.objects.prefetch_related('customer').get(pk=1)
+    customer = story.customer
+
+
+### การเชื่อมตารางแบบ many to many
+    Role - Permisison
+
+    class Role(models.Model):
+        name = models.CharField(max_length=100)
+        has_permissions = models.ManyToManyField("Permission")
+
+    class Permisison(models.Model):
+        name = models.CharField(max_length=100)
+
+    has_permissions จะถูกนำไปใช้เป็นชื่อตารางกลาง คือ role_has_permissions และจะไม่มี column has_permissions บนตารางไหนเลย
+    has_permissions จะถูกใช้เป็นชื่อในการ query ด้วย
+    โดย role_has_permissions จะมี column id, role_id, permission_id
+
+    เมื่อมี role อยากได้ permission
+    role = Role.objects.prefetch_related('has_permissions').get(pk=1)
+    role.has_permissions.first()
+    role.has_permissions.all()
+    role.has_permissions.filter(...)
+
+    เมื่อมี permission อยากรู้ว่ามี role ไหนบ้างมี permission นี้
+    permission = Permission.objects.prefetch_related('role_set').get(pk=1)
+    permission.role_set.all()
+
+
+### การเชื่อมตารางแบบ Generic Relation
+    เป็นความสัมพันธ์ที่ ตารางหนึ่งชี้ไปยัง ตารางอื่นที่แตกต่างกันได้ โดยผ่าน attribute เพียงตัวเดียว
+    เช่น OAuthAccessToken ชี้ไปยังตาราง Customer หรือ User ก็ได้ แต่ชี้ไปได้แค่ตารางใดตารางหนึ่ง 
+        โดยผ่าน attribute เพียงตัวเดียว
+
+    class OAuthAccessToken(models.Model):
+        id = models.BigAutoField(primary_key=True)
+        model_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, default=None)
+        model_id = models.PositiveIntegerField(null=True, default=None)
+        model = GenericForeignKey("model_type", "model_id")
+        pass
+    
+    class Customer(models.Model):
+        oauth_access_token = GenericRelation("OAuthAccessToken", content_type_field="model_type", object_id_field="model_id")
+        pass
+    
+    class User(models.Model):
+        oauth_access_token = GenericRelation("OAuthAccessToken", content_type_field="model_type", object_id_field="model_id")
+        pass
+
+    เมื่อมี OAuthAccessToken Objects อยากเข้าถึง Customer หรือ User
+    token = OAuthAccessToken.objects.get(pk=1)
+    token.model
+
+    แต่จะไม่รู้ว่าเป็น Customer หรือ User จะต้องใช้ model_type ช่วย
+    เช่น 
+        หา Type ของ Model ที่จะเอามาเชค โดย
+        from django.contrib.contenttypes.models import ContentType
+        customerType = ContentType.objects.get(model='customer')
+        userType = ContentType.objects.get(model='user')
+
+        หรือ 
+        customer = Customer.model.objects.get(pk=1)
+        customerType = ContentType.objects.get_for_model(customer)
+
+        user = User.model.objects.get(pk=1)
+        userType = ContentType.objects.get_for_model(user)
+
+        เเล้วเชคโดย
+        token.model_type == customerType    then ...
+        token.model_type == userType        then ...
+
+    เมื่อมี Customer Objects อยากเข้าถึง OAuthAccessToken
+    customer = Customer.objects.get(pk=1)
+    customer.oauth_access_token
+
+    เมื่อมี User Objects อยากเข้าถึง OAuthAccessToken
+    user = User.objects.get(pk=1)
+    user.oauth_access_token
+
+
+### การเข้าถึงตารางใดๆ ที่ชี้มาที่ตารางหลัก 
+    โดยตารางใดๆ จะประกาศ ForeignKey(), ManyToManyField() ชี้มาที่ตารางหลัก
+    สามารถทำได้โดยใช้ reverse direction ด้วยการเติม _set ต่อท้ายชื่อ model พิมพ์เล็ก
+    เช่น 
+        Customer - Story : ForeignKey('Customer')
+        customer.story_set
+
+        Permisison - Role : ManyToManyField('Permission')
+        permission.role_set
+
+
+### on_delete=models.CASCADE
+    เป็นการลบข้อมูลในตารางลูก เมื่อมีการลบข้อมูลตารางแม่
+    โดยจะประกาศไว้ในตารางลูก
+    เช่น ต้องการลบ story จะส่งผลให้ chapter ที่เกี่ยวข้องกับ story นี้ถูกลบตามไปด้วย
+    โดยใน chapter จะประกาศ story = models.ForeignKey('Story', on_delete=models.CASCADE)
+
+
+### Reference การ Query
+    https://docs.djangoproject.com/en/5.0/topics/db/queries/#lookups-that-span-relationships
+
+
+### การ query แบบทั่วไป
+    users = User.objects.all()
+    users = User.objects.first()
+    users = User.objects.last()
+    users = User.objects.filter(first_name='adam')
+    users = User.objects.filter(first_name__icontains='dra').values('first_name').distinct()
+
+
+### การ query แบบเปรียบเทียบ (Field-Lookups) โดยใช้ร่วมกับ filter, exclude, get (ใช้ได้กับบางตัว)
+    Ref: https://docs.djangoproject.com/en/5.0/ref/models/querysets/#field-lookups
+    __exact: เทียบค่าแบบเต็ม
+    __iexact: เทียบค่าแบบเต็ม (case-insensitive)
+    __contains: ตรวจสอบว่ามีค่าที่กำหนดอยู่ในฟิลด์หรือไม่
+    __icontains: ตรวจสอบว่ามีค่าที่กำหนดอยู่ในฟิลด์ (case-insensitive)
+    __gt: มากกว่า
+    __gte: มากกว่าหรือเท่ากับ
+    __lt: น้อยกว่า
+    __lte: น้อยกว่าหรือเท่ากับ
+    __startswith: เริ่มต้นด้วยค่าที่กำหนด
+    __istartswith: เริ่มต้นด้วยค่าที่กำหนด (case-insensitive)
+    __endswith: ลงท้ายด้วยค่าที่กำหนด
+    __iendswith: ลงท้ายด้วยค่าที่กำหนด (case-insensitive)
+    __range: อยู่ในช่วงของค่าที่กำหนด
+    __isnull: เป็น NULL หรือไม่
+    __in: อยู่ในรายการค่าที่กำหนด
+    __year, month, day, hour, minute, second: ใช้สำหรับวันที่/เวลา
+    __week_day: วันในสัปดาห์ (0=Sunday, 1=Monday, ...)
+
+
+### การ query แบบ where in
+    users = User.objects.filter(id__in=[1, 2])
+
+
+### การ query แบบ and
+    users = User.objects.filter(first_name__startswith='Ad', first_name__endswith='m')
+
+
+### การ query แบบ or
+    from django.db.models import Q
+    users = User.objects.filter(Q(first_name__startswith='T') | Q(first_name__startswith='C'))
+    
+
+### การ query แบบกำหนดช่วงเวลา
+    from datetime import datetime, timezone
+
+    startDate = datetime(2024, 5, 2, tzinfo=timezone.utc)
+    endDate = datetime(2024, 5, 3, tzinfo=timezone.utc)
+    users = User.objects.filter(created_at__range=(startDate, endDate))
+
+
+### การ query แบบมี order by
+    น้อยไปมาก หรือ ก่อนมาหลัง
+    users = User.objects.all().order_by('id')
+    มากไปน้อย หรือ หลังมาก่อน
+    users = User.objects.all().order_by('-id')
+
+    เรียงลำดับแบบหลาย Column
+    users = User.objects.all().order_by('-id', 'email')
+
+
+### การ query แบบมี select column
+    users = User.objects.all().values('id', 'email')
+
+
+### การ query แบบลูกโซ่ แบบกำหนดเงื่อนไขของ relative model
+    เช่น User - Order 
+        อยากได้ user ที่มีชื่อขึ้นต้นด้วยตัวอักษร 'Sti' หรือ 'her' 
+        และแต่ละ user มี order ที่ซื้อในช่วง 3 วันที่ผ่านมา
+
+        from datetime import timedelta
+        start_date = timezone.now() - timedelta(days=3)
+
+        users = User.objects.filter(
+                    Q(first_name__startswith='Sti') | Q(first_name__startswith='her'),
+                    order__created_at__gte=start_date
+                )
+
+        # ดึง order ของผู้ใช้แรก
+        orders = users[0].order.all()
+
+
+### การดู sql command จากการ query
+    แบบยังไม่ทำการส่งไปยัง database
+    print(Role.objects.last().has_permissions.all().query)
+
+    แบบที่ส่งไป database
+    from django.db import reset_queries
+    from django.db import connection
+
+    reset_queries()
+    Role.objects.last().has_permissions.all()
+    print(connection.queries)
+
+
+### การใช้และความแตกต่างระหว่าง Select_related กับ Prefetch_related
+    https://medium.com/@undermaneenuch/select-related-and-prefetch-related-a5cdbd9f9bad
+
+    Select_related, Prefetch_related ช่วย load ข้อมูลของตารางย่อยที่ต้องการใช้
+    วิธี load นี้จะช่วยให้แก้ปัญหา N+1 query ให้เหลือแค่ 2 query
+    Select_related   ใช้ได้แค่ 1-to-1 กับ 1-to-many
+    Prefetch_related ใช้ได้ทั้ง 1-to-1, 1-to-many, many-to-many
+
+    from django.db import reset_queries
+    from django.db import connection
+
+    def test(roles):
+        names = []
+        for role in roles:
+            permissions = role.has_permissions.all()
+            for permission in permissions:
+                names.append('{role.name} - {permission.name}, ')
+
+    แบบปกติ ไม่ใช่ loading
+        reset_queries()
+        roles = None
+        roles = Role.objects.all()
+        test(roles)
+        [print(query) for query in connection.queries]
+        print(len(connection.queries))
+
+    แบบ Select_related - ใช้กับ many-to-many ไม่ได้
+        reset_queries()
+        roles = None
+        roles = Role.objects.select_related('has_permissions').all()
+        test(roles)
+        [print(query) for query in connection.queries]
+        print(len(connection.queries))
+
+        => error
+
+    แบบ Prefetch_related
+        reset_queries()
+        roles = None
+        roles = Role.objects.prefetch_related('has_permissions').all()
+        test(roles)
+        [print(query) for query in connection.queries]
+        print(len(connection.queries))
+
+
+### การทำ index
+    class Customer(models.Model):
+        id = models.BigAutoField(primary_key=True)
+        email = models.EmailField(unique=True, max_length=150, db_index=True)
+
+
+### การ reindex id
+    แบบ mannual
+    ALTER TABLE <table_name> AUTO_INCREMENT=<Integer Value>;
+    เช่น ALTER TABLE roles AUTO_INCREMENT=2;
+
+
+### Data type ในการสร้าง column
+    Ref: https://docs.djangoproject.com/en/3.2/ref/models/fields/#field-types
+
+    models.AutoField()                          Integer field ที่มีการ auto-increment เพื่อใช้เป็น primary key
+    models.BigAutoField()                (ใช้)   Integer field ที่มีการ auto-increment แบบขนาดใหญ่ เพื่อใช้เป็น primary key
+    models.BigIntegerField()                    Integer field ที่มีขนาดใหญ่
+    models.BinaryField()                        Field สำหรับเก็บข้อมูล binary data
+    models.BooleanField()                (ใช้)   Field สำหรับเก็บข้อมูล boolean (True/False)
+    models.CharField()                   (ใช้)   Field สำหรับเก็บข้อมูล string ที่มีขนาดจำกัด
+    models.DateField()                          Field สำหรับเก็บข้อมูลวันที่
+    models.DateTimeField()               (ใช้)   Field สำหรับเก็บข้อมูลวันที่และเวลา
+    models.DecimalField()                       Field สำหรับเก็บข้อมูลทศนิยม
+    models.DurationField()                      Field สำหรับเก็บข้อมูลระยะเวลา
+    models.EmailField()                  (ใช้)   Field สำหรับเก็บข้อมูลอีเมล
+    models.FileField()                          Field สำหรับเก็บข้อมูลไฟล์
+    models.FloatField()                         Field สำหรับเก็บข้อมูลทศนิยม
+    models.ForeignKey()                  (ใช้)   Field สำหรับเก็บข้อมูลคีย์นอก (foreign key)
+    models.GenericIPAddressField()              Field สำหรับเก็บข้อมูลที่อยู่ IP
+    models.ImageField()                         Field สำหรับเก็บข้อมูลภาพ
+    models.IntegerField()                (ใช้)   Field สำหรับเก็บข้อมูลจำนวนเต็ม
+    models.ManyToManyField()             (ใช้)   Field สำหรับเก็บข้อมูลความสัมพันธ์ Many-to-Many
+    models.NullBooleanField()                   Field สำหรับเก็บข้อมูล boolean ที่อนุญาตให้เป็น null
+    models.PositiveIntegerField()        (ใช้)   Field สำหรับเก็บข้อมูลจำนวนเต็มบวก
+    models.PositiveSmallIntegerField()          Field สำหรับเก็บข้อมูลจำนวนเต็มบวกที่มีขนาดเล็ก
+    models.SlugField()                          Field สำหรับเก็บข้อมูล slug
+    models.SmallAutoField()                     Integer field ที่มีการ auto-increment แบบเล็ก
+    models.SmallIntegerField()                  Field สำหรับเก็บข้อมูลจำนวนเต็มที่มีขนาดเล็ก
+    models.TextField()                   (ใช้)   Field สำหรับเก็บข้อมูล string ที่มีขนาดใหญ่
+    models.TimeField()                          Field สำหรับเก็บข้อมูลเวลา
+    models.URLField()                           Field สำหรับเก็บข้อมูล URL
+    models.UUIDField()                          Field สำหรับเก็บข้อมูล UUID
+
+    บาง Type สามารถกำหนดค่าได้ดังนี้
+    Key              Value                  Default         Description
+    primary_key      True | False           False           ใช้เพื่อให้มีข้อมูลไม่เกิดการซํ้ากันใน column นี้
+    unique           True | False           False           ใช้เพื่อให้มีข้อมูลไม่เกิดการซํ้ากันใน column นี้
+    max_length       Number                                 ใช้กับ type ที่เป็น string เช่น CharField, TextField
+    null             True | False           False           ใช้เพื่อระบุว่าข้อมูล ไม่ถูกกำหนดค่า เช่น เมื่อมีการเพิ่ม column ใหม่ ทำให้ข้อมูลเดิมไม่มีค่า โดยจะระบุ default=None ด้วย
+    blank            True | False           False           ใช้กับ type ที่เป็น string เพื่อระบุว่าสามารถเป็น empty string ได้ หรือ ใช้เมื่อมีการเพิ่ม column ใหม่ ทำให้ข้อมูลเดิมไม่มีค่า โดยจะระบุ default='' ด้วย
+    default          Any                                    ใช้กำหนด default value
+    choices          [(A, B), (A, B) ...]                   ใช้กำหนดค่าที่เป็นไปได้ล่วงหน้า หากไม่กำหนดตามที่อยู่ใน choice จะไม่ผ่าน validation
+
+
+### การเพิ่ม column ในตารางที่มีอยู่
+    เพิ่มไปที่ไฟล์ model ได้เลย แต่อย่าลืมใส่ null=True, default=None
+    เพราะ ข้อมูลเดิมไม่มีค่าพวกนี้อยู่
+    เช่น จากเดิม
+        class User(models.Model):
+            id = models.BigAutoField(primary_key=True)
+
+        เพิ่มเป็น
+        class User(models.Model):
+            id = models.BigAutoField(primary_key=True)
+            email = models.EmailField(unique=True, max_length=150, db_index=True, null=True, default=None)
+
+    จากนั้นรัน
+    docker-compose exec app python manage.py makemigrations app
+    docker-compose exec app python manage.py migrate
+
+
+### การเพิ่ม column created_at, updated_at ในตารางที่มีอยู่
+    ให้เพิ่มไปที่ไฟล์ model ได้เลย ไม่ต้องกำหนด default
+    เมื่อรัน makemigrations จะมี choice ให้เลือกว่า
+
+    It is impossible to add the field 'created_at' with 'auto_now_add=True' to chapterreaction without providing a default. This is because the database needs something to populate existing rows.
+    1) Provide a one-off default now which will be set on all existing rows
+    2) Quit and manually define a default value in models.py.
+
+    ให้เลือก choice 1 จะเป็นกำหนดค่า default ให้ข้อมูลที่มีอยู่เเล้วบนตารา
+    ให้กำหนดเป็น timezone.now เท่านั้น!!! จากนั้นจะได้ migration file มา
+    หากต้องการเปลี่ยนวันที่ default ให้ไปแก้ไขใน migration file ที่พึ่งสร้าง
+    เช่น จากเดิมเป็น
+
+    migrations.AddField(
+        model_name="chapterreaction",
+        name="created_at",
+        field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+        preserve_default=False,
+    ),
+
+    อยากแก้ให้เป็น 7 วันก่อน ให้สร้างฟังก์ชั่นคำนวณเวลาขึ้นมาใน migration file
+
+    def defaultTime():
+        return django.utils.timezone.now() - django.utils.timezone.timedelta(days=7)
+
+    เเละนำไปใช้
+
+    migrations.AddField(
+        model_name="chapterreaction",
+        name="created_at",
+        field=models.DateTimeField(auto_now_add=True, default=defaultTime),
+        preserve_default=False,
+    ),
+
+    หากมีการทำ squashmigrations ต้อง copy defaultTime ไปวางใน squashed file ด้วย
+    ดังนั้นชื่อฟังก์ชั่นห้ามซํ้ากันหากมีการใช้หลายที่
+
+
+### การแก้ไข column ในตารางที่มีอยู่
+    แก้ไขที่ไฟล์ model ได้เลย แต่ให้ระวังเรื่องการเปลี่ยน type จะทำให้ข้อมูลเดิมเปลี่ยนเป็น null
+    ถ้ามีการเปลี่ยน type ต้องมีการจัดการตามลักษณะหน้างาน
+
+    เช่น จากเดิม
+        class User(models.Model):
+             email = models.EmailField(unique=True, max_length=50)
+
+        แก้เป็น
+        class User(models.Model):
+            email = models.EmailField(unique=True, max_length=150, db_index=True)
+
+    จากนั้นรัน
+    docker-compose exec app python manage.py makemigrations app
+    docker-compose exec app python manage.py migrate
+
+
+### การ seed data เริ่มต้นให้ database ที่ยังไม่มีข้อมูล
+    ดูตัวอย่างที่ main\app\management\commands\Seeds.py
+
+
+### การแก้ไข เพิ่ม ลบ ข้อมูลตาราง configuation หรือ permissions
+    ให้ทำที่ไฟล์ main\app\Settings\configurations.py
+    ให้ทำที่ไฟล์ main\app\Settings\permission.py
+    จากนั้นให้รัน seed data ด้วยคำสั่ง
+
+    docker-compose exec app python manage.py Seeds configuation
+    หรือ
+    docker-compose exec app python manage.py Seeds permission

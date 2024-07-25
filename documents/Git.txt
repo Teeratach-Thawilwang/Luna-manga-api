@@ -1,0 +1,4 @@
+- Git ignore not working
+    - cd to root diectory : <path>/Luna-Manga-API/
+    - commit current change to git
+    - cmd => git rm -rf --cached .

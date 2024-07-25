@@ -1,0 +1,35 @@
+- จำกัด CPU memory สำหรับ docker desktop บน windows
+    - สร้างไฟล์ .wslconfig ที่ C:\Users\Teeratach
+    - เพิ่มค่าดังนี้
+        [wsl2]
+        memory=2GB
+        processors=2
+    - รันคำสั่งบน cmd => wsl --shutdown
+    - จากนั้น docker desktop จะให้ restart
+
+- เมื่อรัน docker-compose up เเล้วจะเชื่อมต่อไปยัง database จะต้องใช้ HOST ip address จาก wls หาได้จากคำสั่ง wsl hostname -I
+
+- รัน mode replica
+    - docker-compose --compatibility up -d
+
+- รัน docker compose ระบุไฟล์
+    - docker-compose -f docker-compose-worker.yml down // ลบ container ที่ประกาศไว้ใน docker-compose-worker.yml ออก
+
+- รวมคำสั่ง ทั่วไป
+    - service name คือชื่อ service container ใน docker-compose      // ไม่ใช่ container name
+    - docker ps -a                                               // เรียกดู container ทั้งหมด
+    - docker image list                                          // เรียกดู Image ทั้งหมด
+    - docker-compose up -d                                       // start(ถ้ามีอยู่) หรือ re-create container ทั้งหมด ใน mode detach หรือ background mode
+    - docker-compose up -d --build                               // สร้าง image ใหม่จาก Dockerfile และ re-create container ทั้งหมด
+    - docker-compose up -d --build <service name>                // สร้าง image ใหม่จาก Dockerfile และ re-create container ตาม service name ที่ระบุ
+    - docker-compose up -d <service name>                        // start(ถ้ามีอยู่) หรือ re-create container โดยระบุ service name และรันใน mode detach หรือ background mode
+    - docker-compose start <service name>                        // start container
+    - docker-compose stop <service name>                         // stop container คืน resource ให้เครื่อง
+    - docker-compose pause <service name>                        // เเช่เเข็ง container แต่ไม่คืน resource ให้เครื่อง
+    - docker-compose restart                                     // restart container ทั้งหมดที่รันอยู่ เช่น เมื่อมีการแก้ไข env ต้อง restart ใหม่
+    - docker-compose restart <service name>                      // restart container ตาม service name ที่ระบุ
+    - docker-compose exec <service name> bash                    // shell เข้าไปใน container เหมือน ssh linux
+    - docker-compose exec <service name> <command>               // รัน command ใน container โดยไม่ต้อง shell เข้าไปใน container
+    - docker rm $(docker ps -a -q)                               // ลบ Container ทั้งหมดที่ Stop อยู่
+    - docker rmi <image id>                                      // ลบ Image ตามที่ระบุ
+    - docker stop $(docker ps -a -q)                             // หยุดการทำงาน Container ทั้งหมด
