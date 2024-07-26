@@ -27,6 +27,8 @@ class WidgetCollectionResource(JsonResponse):
         return self.data
 
     def getBannersPaginated(self, widget: Widget):
-        bannerPaginated = paginate(1, 15, widget.widgetbanner_set, [Q(banner__status=BannerStatusEnum.ACTIVE)])
+        query = [Q(banner__status=BannerStatusEnum.ACTIVE)]
+        orderBy = ["id"]
+        bannerPaginated = paginate(1, 15, widget.widgetbanner_set, query, orderBy)
         bannerPaginated["data"] = WidgetService().transformBannersFromWidgetBanners(bannerPaginated["data"])
         return bannerPaginated
