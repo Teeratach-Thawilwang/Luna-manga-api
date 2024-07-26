@@ -32,10 +32,6 @@ class CollectionEnum:
                 "width": 200,
                 "height": 200,
             },
-            "mobile": {
-                "width": 700,
-                "height": 700,
-            },
             "desktop": {
                 "width": 1000,
                 "height": 1000,
@@ -49,10 +45,6 @@ class CollectionEnum:
             "thumbnail": {
                 "width": 196,
                 "height": 94,
-            },
-            "mobile": {
-                "width": 686,
-                "height": 329,
             },
             "desktop": {
                 "width": 980,
@@ -68,10 +60,6 @@ class CollectionEnum:
                 "width": 196,
                 "height": 94,
             },
-            "mobile": {
-                "width": 686,
-                "height": 329,
-            },
             "desktop": {
                 "width": 980,
                 "height": 470,
@@ -85,10 +73,6 @@ class CollectionEnum:
             "thumbnail": {
                 "width": 196,
                 "height": 60,
-            },
-            "mobile": {
-                "width": 686,
-                "height": 210,
             },
             "desktop": {
                 "width": 980,
@@ -104,10 +88,6 @@ class CollectionEnum:
                 "width": 200,
                 "height": 50,
             },
-            "mobile": {
-                "width": 700,
-                "height": 175,
-            },
             "desktop": {
                 "width": 1000,
                 "height": 250,
@@ -122,10 +102,6 @@ class CollectionEnum:
                 "width": 200,
                 "height": 36,
             },
-            "mobile": {
-                "width": 700,
-                "height": 126,
-            },
             "desktop": {
                 "width": 1000,
                 "height": 180,
@@ -138,10 +114,6 @@ class CollectionEnum:
         "conversion": {
             "thumbnail": {
                 "width": 160,
-                "height": "auto",
-            },
-            "mobile": {
-                "width": 700,
                 "height": "auto",
             },
             "desktop": {
@@ -176,10 +148,6 @@ class CollectionEnum:
         "conversion": {
             "thumbnail": {
                 "width": 160,
-                "height": "auto",
-            },
-            "mobile": {
-                "width": 700,
                 "height": "auto",
             },
             "desktop": {
