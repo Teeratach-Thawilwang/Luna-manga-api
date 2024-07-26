@@ -58,7 +58,7 @@ class FileController(viewsets.ModelViewSet):
             "uploadFile": uploadFile,
             "collection": collection,
         }
-        # Event(EventEnum.UPLOAD_FILE, uploadParams)
+        Event(EventEnum.UPLOAD_FILE, uploadParams)
 
         return FileResource(file, status=status.HTTP_201_CREATED)
 
