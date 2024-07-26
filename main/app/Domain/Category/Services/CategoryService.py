@@ -4,6 +4,7 @@ from typing import Any
 from app.Domain.Category.Models.Category import Category
 from app.Enums.CollectionEnum import CollectionNameEnum
 from app.Enums.OrderByEnum import OrderByEnum
+from app.Exceptions.PermissionException import PermissionException
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Services.Paginator import paginate
 from django.db.models import Q
@@ -63,6 +64,9 @@ class CategoryService:
             raise ResourceNotFoundException({"message": e})
 
     def deleteById(self, id: int) -> None:
+        if id in [1, 2]:
+            raise PermissionException({"message": "Default category cannot be deleted."})
+
         try:
             model = self.querySet.get(pk=id)
             model.delete()
