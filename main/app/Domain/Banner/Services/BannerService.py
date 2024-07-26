@@ -107,15 +107,17 @@ class BannerService:
             chapter = Chapter.objects.get(pk=chapterId)
             fileable = chapter.fileable.filter(file__collection_name=CollectionNameEnum.CHAPTER_COVER_IMAGE)
             chapterFile: File = fileable[0].file
-            self.updateOrCreateBannerFileable(bannerId, chapterFile, CollectionNameEnum.BANNER_CHAPTER)
+            # self.updateOrCreateBannerFileable(bannerId, chapterFile, CollectionNameEnum.BANNER_CHAPTER)
+            FileableService().syncSingleFileable(bannerId, "banner", chapterFile.id, chapterFile.collection_name)
 
         if bannerType == BannerTypeEnum.STORY:
             story = Story.objects.get(pk=storyId)
             fileable = story.fileable.filter(file__collection_name=CollectionNameEnum.STORY_IMAGE)
             storyFile: File = fileable[0].file
-            self.updateOrCreateBannerFileable(bannerId, storyFile, CollectionNameEnum.BANNER_STORY)
+            # self.updateOrCreateBannerFileable(bannerId, storyFile, CollectionNameEnum.BANNER_STORY)
+            FileableService().syncSingleFileable(bannerId, "banner", storyFile.id, storyFile.collection_name)
 
-        if bannerType in [BannerTypeEnum.STORY_WINDOW, BannerTypeEnum.ADVERTISEMENT_SMALL, BannerTypeEnum.ADVERTISEMENT_MEDIUM, BannerTypeEnum.ADVERTISEMENT_GROUP]:
+        if bannerType in BannerTypeEnum.advertisement():
             files = File.objects.filter(id__in=imageIds)
             for file in files:
                 FileableService().syncSingleFileable(bannerId, "banner", file.id, file.collection_name)
@@ -145,9 +147,9 @@ class BannerService:
         fileableService = FileableService()
         match banner.type:
             case BannerTypeEnum.CHAPTER:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_CHAPTER, sideUrl)
+                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.CHAPTER_COVER_IMAGE, sideUrl)
             case BannerTypeEnum.STORY:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_STORY, sideUrl)
+                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.STORY_IMAGE, sideUrl)
             case BannerTypeEnum.STORY_WINDOW:
                 images = fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_STORY_WINDOW_1, sideUrl)
                 images += fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_STORY_WINDOW_2, sideUrl)

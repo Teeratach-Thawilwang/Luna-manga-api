@@ -16,3 +16,12 @@ class BannerTypeEnum:
             "advertisement_medium",
             "advertisement_group",
         ]
+
+    @staticmethod
+    def advertisement():
+        return [
+            "story_window",
+            "advertisement_small",
+            "advertisement_medium",
+            "advertisement_group",
+        ]
