@@ -1,5 +1,5 @@
 - จำกัด CPU memory สำหรับ docker desktop บน windows
-    - สร้างไฟล์ .wslconfig ที่ C:\Users\Teeratach
+    - สร้างไฟล์ .wslconfig ที่ C:\Users\<username>
     - เพิ่มค่าดังนี้
         [wsl2]
         memory=2GB
