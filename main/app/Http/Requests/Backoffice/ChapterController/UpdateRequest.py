@@ -19,7 +19,6 @@ class Validator(serializers.Serializer):
         self.fields["id"] = serializers.IntegerField(required=True)
         self.fields["story_id"] = serializers.IntegerField(required=True)
         self.fields["name"] = serializers.CharField(required=True)
-        self.fields["slug"] = serializers.CharField(required=True)
         self.fields["chapter_number"] = serializers.IntegerField(required=True)
         self.fields["type"] = serializers.ChoiceField(CategoryEnum.list(), required=True)
         self.fields["status"] = serializers.ChoiceField(ChapterStatusEnum.list(), required=True)
