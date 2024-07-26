@@ -2,13 +2,19 @@ import json
 from sys import modules
 from typing import Any
 
+from app.Domain.Banner.Models.Banner import Banner
 from app.Domain.Chapter.Models.Chapter import Chapter
 from app.Domain.Chapter.Models.ChapterReaction import ChapterReaction
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.Story.Models.Story import Story
+from app.Domain.User.Models.User import User
+from app.Enums.BannerTypeEnum import BannerTypeEnum
 from app.Enums.CategoryEnum import CategoryEnum
 from app.Enums.CollectionEnum import CollectionNameEnum
+from app.Enums.EventEnum import EventEnum
 from app.Enums.OrderByEnum import OrderByEnum
+from app.Enums.StatusEnum import BannerStatusEnum, ChapterStatusEnum
+from app.Event.Event import Event
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Services.Helpers import getCache, getSecondsUntilTomorrow, setCache
 from app.Services.Paginator import paginate
@@ -18,6 +24,9 @@ from django.utils import timezone
 
 if "FileableService" not in modules:
     from app.Domain.File.Services.FileableService import FileableService
+
+if "BannerService" not in modules:
+    from app.Domain.Banner.Services.BannerService import BannerService
 
 
 class ChapterService:
@@ -102,8 +111,18 @@ class ChapterService:
         try:
             model = self.querySet.get(pk=id)
             model.delete()
+            self.deleteBannerByChapterId(id)
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
+
+    def deleteBannerByChapterId(id: int):
+        params = {
+            "model_id": id,
+            "type": BannerTypeEnum.CHAPTER,
+        }
+        banner: Banner | None = BannerService().findBy(params).first()
+        if banner != None:
+            banner.delete()
 
     def prefetch(self, *relations: tuple):
         self.querySet = self.querySet.prefetch_related(*relations)
@@ -215,3 +234,40 @@ class ChapterService:
             case CategoryEnum.NOVEL:
                 currentCount = getCache("novel_view_count", 0)
                 setCache("novel_view_count", currentCount + 1, getSecondsUntilTomorrow())
+
+    def mapChapterStatusToBannerStatus(self, status: ChapterStatusEnum) -> BannerStatusEnum:
+        match status:
+            case ChapterStatusEnum.ACTIVE:
+                return BannerStatusEnum.ACTIVE
+            case ChapterStatusEnum.INACTIVE:
+                return BannerStatusEnum.INACTIVE
+
+    def updateOrCreateBannerFromChapter(self, chapter: Chapter, user: User) -> None:
+        bannerStatus = self.mapChapterStatusToBannerStatus(chapter.status)
+        bannerParams = {
+            "name": chapter.name,
+            "title": chapter.story.name,
+            "type": BannerTypeEnum.CHAPTER,
+            "link": f"story/{chapter.story.slug}/{chapter.id}",
+            "status": bannerStatus,
+            "model_id": chapter.id,
+            "updated_by": user,
+        }
+
+        queryParams = {
+            "model_id": chapter.id,
+            "type": BannerTypeEnum.CHAPTER,
+        }
+        banner: Banner | None = BannerService().findBy(queryParams).first()
+        if banner == None:
+            banner = BannerService().create(bannerParams)
+        else:
+            banner = BannerService().update(banner.id, bannerParams)
+
+        syncParams = {
+            "banner": banner,
+            "storyId": None,
+            "chapterId": chapter.id,
+            "imageIds": [],
+        }
+        Event(EventEnum.SYNC_BANNER_FILEABLE, syncParams)

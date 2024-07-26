@@ -36,6 +36,7 @@ class ChapterController(viewsets.ModelViewSet):
         service = ChapterService().prefetch("story", "fileable__file")
         chapter = service.create(params)
         service.createFileableForChapter(chapter.id, chapter.text)
+        service.updateOrCreateBannerFromChapter(chapter, request.user)
 
         return ChapterResource(chapter, status=status.HTTP_201_CREATED)
 
@@ -51,6 +52,7 @@ class ChapterController(viewsets.ModelViewSet):
         service = ChapterService().prefetch("story", "fileable__file")
         chapter = service.update(id, params)
         service.createFileableForChapter(chapter.id, chapter.text)
+        service.updateOrCreateBannerFromChapter(chapter, request.user)
 
         return ChapterResource(chapter, status=status.HTTP_200_OK)
 

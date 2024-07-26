@@ -1,11 +1,18 @@
 from sys import modules
 from typing import Any
 
+from app.Domain.Banner.Models.Banner import Banner
 from app.Domain.Category.Models.Category import Category
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.Story.Models.Story import Story
 from app.Domain.Story.Models.StoryReaction import StoryReaction
+from app.Domain.User.Models.User import User
+from app.Enums.BannerTypeEnum import BannerTypeEnum
+from app.Enums.CategoryEnum import CategoryEnum
 from app.Enums.CollectionEnum import CollectionNameEnum
+from app.Enums.EventEnum import EventEnum
+from app.Enums.StatusEnum import BannerStatusEnum, StoryStatusEnum
+from app.Event.Event import Event
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Services.Paginator import paginate
 from django.db.models import Q, Sum
@@ -14,6 +21,9 @@ from django.utils import timezone
 
 if "FileableService" not in modules:
     from app.Domain.File.Services.FileableService import FileableService
+
+if "BannerService" not in modules:
+    from app.Domain.Banner.Services.BannerService import BannerService
 
 
 class StoryService:
@@ -38,6 +48,7 @@ class StoryService:
 
     def create(self, params: dict[str, Any]) -> Story:
         imageId = None
+        categoryIds = None
 
         if "category_ids" in params:
             categoryIds = params["category_ids"]
@@ -48,6 +59,7 @@ class StoryService:
             del params["cover_image_id"]
 
         story = self.querySet.create(**params)
+        categoryIds = self.addDefaultCategoryByType(params["category_ids"], params["type"])
         categories = Category.objects.filter(id__in=categoryIds)
         self.addCategories(story, categories)
 
@@ -74,9 +86,8 @@ class StoryService:
             if imageId != None:
                 FileableService().syncSingleFileable(id, "story", imageId, CollectionNameEnum.STORY_IMAGE)
 
-            if categoryIds != None:
-                self.syncCategory(id, categoryIds)
-
+            categoryIds = self.addDefaultCategoryByType(params["category_ids"], params["type"])
+            self.syncCategory(id, categoryIds)
             return self.querySet.get(pk=id)
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
@@ -100,8 +111,25 @@ class StoryService:
         try:
             model = self.querySet.get(pk=id)
             model.delete()
+            self.deleteBannerByStoryId(id)
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
+
+    def deleteBannerByStoryId(id: int):
+        params = {
+            "model_id": id,
+            "type": BannerTypeEnum.STORY,
+        }
+        banner: Banner | None = BannerService().findBy(params).first()
+        if banner != None:
+            banner.delete()
+
+    def addDefaultCategoryByType(categoryIds: list[int], type: CategoryEnum):
+        defaultCategoryId = 1  # manga
+        if type == CategoryEnum.NOVEL:
+            defaultCategoryId = 2  # novel
+        categoryIds.append(defaultCategoryId)
+        return list(set(categoryIds))
 
     def prefetch(self, *relations: tuple):
         self.querySet = self.querySet.prefetch_related(*relations)
@@ -259,3 +287,42 @@ class StoryService:
             "is_disliked": isDisliked,
             "rating_score": self.getRating(story),
         }
+
+    def mapStoryStatusToBannerStatus(self, status: StoryStatusEnum) -> BannerStatusEnum:
+        match status:
+            case StoryStatusEnum.ONGOING:
+                return BannerStatusEnum.ACTIVE
+            case StoryStatusEnum.FINISHED:
+                return BannerStatusEnum.ACTIVE
+            case StoryStatusEnum.INACTIVE:
+                return BannerStatusEnum.INACTIVE
+
+    def updateOrCreateBannerFromStory(self, story: Story, user: User) -> None:
+        bannerStatus = self.mapStoryStatusToBannerStatus(story.status)
+        bannerParams = {
+            "name": story.name,
+            "title": story.name,
+            "type": BannerTypeEnum.STORY,
+            "link": f"story/{story.slug}",
+            "status": bannerStatus,
+            "model_id": story.id,
+            "updated_by": user,
+        }
+
+        queryParams = {
+            "model_id": story.id,
+            "type": BannerTypeEnum.STORY,
+        }
+        banner: Banner | None = BannerService().findBy(queryParams).first()
+        if banner == None:
+            banner = BannerService().create(bannerParams)
+        else:
+            banner = BannerService().update(banner.id, bannerParams)
+
+        syncParams = {
+            "banner": banner,
+            "storyId": story.id,
+            "chapterId": None,
+            "imageIds": [],
+        }
+        Event(EventEnum.SYNC_BANNER_FILEABLE, syncParams)

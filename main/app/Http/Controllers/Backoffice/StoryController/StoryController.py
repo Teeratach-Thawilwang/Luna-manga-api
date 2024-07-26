@@ -37,6 +37,7 @@ class StoryController(viewsets.ModelViewSet):
         if "customer_id" not in params:
             params["customer_id"] = 1  # Default customer : Admin
         story = StoryService().create(params)
+        StoryService().updateOrCreateBannerFromStory(story, request.user)
 
         return StoryResource(story, status=status.HTTP_201_CREATED)
 
@@ -51,6 +52,7 @@ class StoryController(viewsets.ModelViewSet):
         params = request.params
         service = StoryService().prefetch("categories", "fileable__file")
         story = service.update(id, params)
+        StoryService().updateOrCreateBannerFromStory(story, request.user)
 
         return StoryResource(story, status=status.HTTP_200_OK)
 
