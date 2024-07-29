@@ -2,8 +2,8 @@ FROM python:3.11.9-slim
 
 EXPOSE 8000
 
-WORKDIR /data/main
-COPY . ../
+WORKDIR /root/main/app
+COPY app ./app
 
 RUN apt-get update && apt-get install -y \
     python3-dev \
@@ -11,4 +11,4 @@ RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     build-essential && \
     pip3 install --upgrade pip && \
-    pip3 install -r requirements.txt --no-cache-dir
+    pip3 install -r ./app/requirements.txt --no-cache-dir
