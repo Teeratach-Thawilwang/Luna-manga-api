@@ -1,15 +1,16 @@
 from datetime import timedelta
 
-from app.Notifications.EmailNotification import EmailNotification
-from app.Services.EmailService import EmailService
 from django.conf import settings
 from django.core.cache import cache
+
+from app.Notifications.EmailNotification import EmailNotification
+from app.Services.EmailService import EmailService
 
 
 class CustomerRegisterEmailNotification:
     def __init__(self, customer):
         self.customer = customer
-        self.subject = "Welcome to Django API"
+        self.subject = "Welcome to Luna manga, ยินดีต้อนรับสู่ Luna manga"
 
         params = {
             "subject": self.subject,
