@@ -8,6 +8,9 @@ main/storage/local/*
 .gitlog
 .vscode
 .env
+.env.dev
+.env.worker
+.env.production
 .env.*.*
 
 # Byte-compiled / optimized / DLL files
