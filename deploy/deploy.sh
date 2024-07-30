@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd /root/main/API
 docker rmi $(docker images -f "dangling=true" -q)
 docker-compose stop app worker
 docker-compose rm app worker --force
