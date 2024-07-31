@@ -1,0 +1,7 @@
+﻿         Local                            Server
+- deploy/deploy.sh              => /root/main/API/deploy.sh
+- deploy/docker-compose.yml     => /root/main/API/docker-compose.yml
+- nginx/*                       => /root/main/API/nginx/*
+- .env                          => /root/main/API/.env
+- .env.worker                   => /root/main/API/.env.wroker # Use .env to set Allow host to start with 'https://'
+- uwsgi.ini                     => /root/main/API/uwsgi.ini
