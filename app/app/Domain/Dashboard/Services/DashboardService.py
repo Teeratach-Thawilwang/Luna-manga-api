@@ -1,10 +1,11 @@
+from django.contrib.contenttypes.models import ContentType
+
 from app.Domain.Authentication.Models.OAuthAccessToken import OAuthAccessToken
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.CustomerReport.Models.CustomerReport import CustomerReport
 from app.Enums.CustomerReportSourceEnum import CustomerReportSourceEnum
 from app.Enums.DashboardTypeEnum import DashboardTypeEnum
 from app.Services.Helpers import getCache, getDatetimeTodayUtc
-from django.contrib.contenttypes.models import ContentType
 
 
 class DashboardService:
@@ -38,7 +39,8 @@ class DashboardService:
         guestTokenCount = OAuthAccessToken.objects.filter(created_at__gte=todayUtc, model_id=None).count()
 
         customerType = ContentType.objects.get(model="customer")
-        customerTokenCount = OAuthAccessToken.objects.filter(created_at__gte=todayUtc, model_id__isnull=False, model_type_id=customerType.id).count()
+        customerTokenModelIds = OAuthAccessToken.objects.filter(created_at__gte=todayUtc, model_id__isnull=False, model_type_id=customerType.id).values_list("model_id")
+        customerTokenCount = len(set(customerTokenModelIds))
         return {
             "name": DashboardTypeEnum.VISIT,
             "middle": guestTokenCount + customerTokenCount,
