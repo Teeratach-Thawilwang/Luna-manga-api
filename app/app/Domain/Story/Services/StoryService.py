@@ -304,7 +304,7 @@ class StoryService:
             "name": story.name,
             "title": story.name,
             "type": BannerTypeEnum.STORY,
-            "link": f"story/{story.slug}",
+            "link": f"/story/{story.slug}",
             "status": bannerStatus,
             "model_id": story.id,
             "updated_by": user,

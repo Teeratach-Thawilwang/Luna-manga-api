@@ -249,7 +249,7 @@ class ChapterService:
             "name": chapter.name,
             "title": chapter.story.name,
             "type": BannerTypeEnum.CHAPTER,
-            "link": f"story/{chapter.story.slug}/{chapter.chapter_number}",
+            "link": f"/story/{chapter.story.slug}/{chapter.chapter_number}",
             "status": bannerStatus,
             "model_id": chapter.id,
             "updated_by": user,
