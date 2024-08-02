@@ -1,5 +1,6 @@
 ﻿from django.core.management.base import BaseCommand
-from django.db.models import Max, OuterRef, Subquery
+from django.db.models import IntegerField, Max, OuterRef, Subquery
+from django.db.models.functions import Cast, Substr
 
 from app.Domain.Banner.Models.Banner import Banner
 from app.Domain.Widget.Services.WidgetService import WidgetService
@@ -19,11 +20,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Group by story
-        subquery = Banner.objects.filter(type=BannerTypeEnum.CHAPTER).values("title").annotate(max_id=Max("id")).values("max_id")
-        bannerIdsDict = Banner.objects.filter(id__in=subquery, type=BannerTypeEnum.CHAPTER).order_by("-id").values("id")
+        # subquery = Banner.objects.filter(type=BannerTypeEnum.CHAPTER).values("title").annotate(max_id=Max("id")).values("max_id")
+        # bannerIdsDict = Banner.objects.filter(id__in=subquery, type=BannerTypeEnum.CHAPTER).order_by("-id").values("id")
 
         # No Group by
         # bannerIdsDict = Banner.objects.filter(type=BannerTypeEnum.CHAPTER).order_by("-id").values("id")[:100]
+
+        # Group by story, sort by banner name
+        maxNameNumberSubquery = (
+            Banner.objects.filter(type=BannerTypeEnum.CHAPTER, title=OuterRef("title"))
+            .annotate(name_number=Cast(Substr("name", 7), IntegerField()))
+            .values("title")
+            .annotate(max_name_number=Max("name_number"))
+            .values("max_name_number")
+        )
+        bannersWithMaxNameNumber = Banner.objects.annotate(name_number=Cast(Substr("name", 7), IntegerField())).filter(type=BannerTypeEnum.CHAPTER, name_number=Subquery(maxNameNumberSubquery))
+        groupedBannersSubquery = bannersWithMaxNameNumber.values("title").annotate(max_id=Max("id")).values("max_id")
+        bannerIdsDict = Banner.objects.filter(id__in=Subquery(groupedBannersSubquery), type=BannerTypeEnum.CHAPTER).order_by("-id").values("id")
 
         bannerIds = [banner["id"] for banner in bannerIdsDict]
 
