@@ -46,7 +46,7 @@ def getCache(key: str, default=None):
 
 
 def getDatetimeTodayUtc():
-    toDayUtc = timezone.now().date()
+    toDayUtc = timezone.localtime(timezone.now())
     return datetime.combine(toDayUtc, time.min, tzinfo=timezone.utc)
 
 
