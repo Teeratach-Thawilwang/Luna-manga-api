@@ -7,7 +7,6 @@
   - [4. Migrate table](#4-migrate-table)
   - [5. Seed initial data](#-5seed-initial-data)
   - [6. Create requirements file when install new package](#6-Create-requirements-file-when-install-new-package)
-  - [7. Backup database](#7-backup-database)
 - [Run unit test](#run-unit-test)
   - [1. Set APP_ENV](#1-set-app_env)
   - [2. Run test command](#2-run-test-command)
@@ -87,15 +86,6 @@ password : super-user
 
 ```sh
 docker-compose exec app pip freeze > requirements.txt
-```
-
-#### [7. Backup database](#index)
-
-```sh
-docker-compose exec <service_name> mysqldump -u [username] --password=[password]  [database_name] > [path/filename.sql]
-
-# Example
-docker-compose exec db mysqldump -u root --password=root  dev > backup_initial.sql
 ```
 
 ---
