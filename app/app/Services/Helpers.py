@@ -46,8 +46,10 @@ def getCache(key: str, default=None):
 
 
 def getDatetimeTodayUtc():
-    toDayUtc = timezone.localtime(timezone.now())
-    return datetime.combine(toDayUtc, time.min, tzinfo=timezone.utc)
+    toDayLocalTime = timezone.localtime(timezone.now())
+    midnightLocalTime = toDayLocalTime.replace(hour=0, minute=0, second=0, microsecond=0)
+    midnightUTC = midnightLocalTime.astimezone(timezone.utc)
+    return midnightUTC
 
 
 def getSecondsUntilTomorrow():
