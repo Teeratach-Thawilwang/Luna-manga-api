@@ -36,10 +36,12 @@ class DashboardService:
 
     def getVisitItem(self) -> dict[str, list[str]]:
         todayUtc = getDatetimeTodayUtc()
-        guestTokenCount = OAuthAccessToken.objects.filter(created_at__gte=todayUtc, model_id=None).count()
+        guestTokenParams = {"created_at__gte": todayUtc, "model_id": None, "client_id": 2}
+        guestTokenCount = OAuthAccessToken.objects.filter(**guestTokenParams).count()
 
         customerType = ContentType.objects.get(model="customer")
-        customerTokenModelIds = OAuthAccessToken.objects.filter(created_at__gte=todayUtc, model_id__isnull=False, model_type_id=customerType.id).values_list("model_id")
+        customerTokenParams = {"created_at__gte": todayUtc, "model_id__isnull": False, "model_type_id": customerType.id, "client_id": 2}
+        customerTokenModelIds = OAuthAccessToken.objects.filter(**customerTokenParams).values_list("model_id")
         customerTokenCount = len(set(customerTokenModelIds))
         return {
             "name": DashboardTypeEnum.VISIT,
