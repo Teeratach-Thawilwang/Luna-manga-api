@@ -53,9 +53,9 @@ def getDatetimeTodayUtc():
 
 
 def getSecondsUntilTomorrow():
-    now = timezone.now()
-    tomorrow = datetime.combine(now.date() + timedelta(days=1), time.min, tzinfo=timezone.utc)
-    delta = tomorrow - now
+    midnightUTC = getDatetimeTodayUtc()
+    tomorrow = midnightUTC + timedelta(days=1)
+    delta = tomorrow - timezone.now()
     return int(delta.total_seconds())
 
 
