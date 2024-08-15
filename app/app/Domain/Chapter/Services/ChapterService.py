@@ -116,7 +116,7 @@ class ChapterService:
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
 
-    def deleteBannerByChapterId(id: int):
+    def deleteBannerByChapterId(self, id: int):
         params = {
             "model_id": id,
             "type": BannerTypeEnum.CHAPTER,

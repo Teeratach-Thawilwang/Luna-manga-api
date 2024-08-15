@@ -116,7 +116,7 @@ class StoryService:
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
 
-    def deleteBannerByStoryId(id: int):
+    def deleteBannerByStoryId(self, id: int):
         params = {
             "model_id": id,
             "type": BannerTypeEnum.STORY,
