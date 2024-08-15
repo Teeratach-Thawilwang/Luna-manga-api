@@ -67,3 +67,26 @@ def extractEnglish(text: str):
 def createSlug(text: str):
     text = extractEnglish(text)
     return slugify(text, allow_unicode=True)
+
+
+def getReferer(request):
+    return request.META.get("HTTP_REFERER", "")
+
+
+def getUserAgent(request):
+    return request.META.get("HTTP_USER_AGENT", "")
+
+
+def getUserIPAddress(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        return x_forwarded_for.split(",")[0]
+    return request.META.get("REMOTE_ADDR")
+
+
+def getRequestMeta(request):
+    return {
+        "referer": getReferer(request),
+        "user_agent": getUserAgent(request),
+        "ip_address": getUserIPAddress(request),
+    }

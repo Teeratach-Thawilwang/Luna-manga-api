@@ -17,6 +17,7 @@ class OAuthAccessToken(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     expired_at = models.DateTimeField()
     revoked_at = models.DateTimeField(null=True, default=None)
+    meta = models.TextField(max_length=500, null=True, default=None)
 
     client = models.ForeignKey("OAuthClient", on_delete=models.CASCADE)
 

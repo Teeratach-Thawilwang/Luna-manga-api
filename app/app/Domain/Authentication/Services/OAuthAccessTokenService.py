@@ -3,6 +3,9 @@ from sys import modules
 from typing import Any
 
 import jwt
+from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+
 from app.Domain.Authentication.Models.OAuthAccessToken import OAuthAccessToken
 from app.Domain.Authentication.Models.OAuthClient import OAuthClient
 from app.Domain.Customer.Models.Customer import Customer
@@ -10,8 +13,7 @@ from app.Domain.User.Models.User import User
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Exceptions.TokenExpiredException import TokenExpiredException
 from app.Exceptions.TokenInvalidException import TokenInvalidException
-from django.contrib.contenttypes.models import ContentType
-from django.utils import timezone
+from app.Services.Helpers import getDatetimeTodayUtc
 
 if "OAuthClientService" not in modules:
     from app.Domain.Authentication.Services.OAuthClientService import OAuthClientService
@@ -27,8 +29,10 @@ class OAuthAccessTokenService:
     def generateToken(self, oAuthClient: OAuthClient, account: Customer | User = None) -> dict[str, Any]:
         uuid4 = str(uuid.uuid4())
         issueAt = timezone.now()
-        accessTokenExpiredAt = issueAt + timezone.timedelta(days=1)
-        refreshTokenExpiredAt = issueAt + timezone.timedelta(days=7)
+        midnighTodaytUTC = getDatetimeTodayUtc()
+
+        accessTokenExpiredAt = midnighTodaytUTC + timezone.timedelta(days=1)
+        refreshTokenExpiredAt = midnighTodaytUTC + timezone.timedelta(days=7)
 
         payload = {
             "uuid": uuid4,
@@ -60,7 +64,7 @@ class OAuthAccessTokenService:
         }
         return token
 
-    def createGuestToken(self, clientId: str) -> OAuthAccessToken:
+    def createGuestToken(self, clientId: str, meta: dict[str]) -> OAuthAccessToken:
         oAuthClient = OAuthClientService().getByClientId(clientId)
         token = self.generateToken(oAuthClient)
         params = {
@@ -69,11 +73,12 @@ class OAuthAccessTokenService:
             "scopes": "read",
             "expired_at": token["expired_at"],
             "client_id": oAuthClient.id,
+            "meta": meta,
         }
 
         return OAuthAccessToken.objects.create(**params)
 
-    def createAccountToken(self, clientId: str, account: Customer | User) -> OAuthAccessToken:
+    def createAccountToken(self, clientId: str, account: Customer | User, meta: dict[str]) -> OAuthAccessToken:
         oAuthClient = OAuthClientService().getByClientId(clientId)
         token = self.generateToken(oAuthClient, account)
         params = {
@@ -84,6 +89,7 @@ class OAuthAccessTokenService:
             "scopes": "read write",
             "expired_at": token["expired_at"],
             "client_id": oAuthClient.id,
+            "meta": meta,
         }
 
         return OAuthAccessToken.objects.create(**params)
@@ -116,7 +122,7 @@ class OAuthAccessTokenService:
             return True
         return False
 
-    def refreshToken(self, refreshToken: str) -> OAuthAccessToken:
+    def refreshToken(self, refreshToken: str, meta: dict[str]) -> OAuthAccessToken:
         oAuthAccessToken = self.getBy({"refresh_token": refreshToken})
 
         if oAuthAccessToken.revoked_at is not None:
@@ -130,9 +136,9 @@ class OAuthAccessTokenService:
 
         if oAuthAccessToken.model is not None:
             account = oAuthAccessToken.owner()
-            return self.createAccountToken(clientId, account)
+            return self.createAccountToken(clientId, account, meta)
 
-        return self.createGuestToken(clientId)
+        return self.createGuestToken(clientId, meta)
 
     def revokeToken(self, token: str) -> OAuthAccessToken:
         params = {
