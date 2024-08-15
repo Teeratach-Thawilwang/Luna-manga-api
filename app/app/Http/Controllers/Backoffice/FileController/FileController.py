@@ -1,3 +1,13 @@
+import json
+
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
+from rest_framework import status, viewsets
+
 from app.Domain.File.Services.FileService import FileService
 from app.Enums.CollectionEnum import CollectionEnum
 from app.Enums.EventEnum import EventEnum
@@ -11,13 +21,6 @@ from app.Http.Resources.Backoffice.FileController.FileResource import FileResour
 from app.Middlewares.AuthenticationMiddleware import AuthenticationMiddleware
 from app.Middlewares.UserPermissionMiddleware import UserPermissionMiddleware
 from app.Providers.CloudFrontService import CloudFrontService
-from django.conf import settings
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
-from rest_framework import status, viewsets
 
 
 class FileController(viewsets.ModelViewSet):
@@ -42,7 +45,7 @@ class FileController(viewsets.ModelViewSet):
     def store(self, request):
         StoreRequest(request)
 
-        params = request.params
+        params: dict = request.params
         uploadFile = params["file"][0]
         collection = CollectionEnum().get(params["collection_name"])
 
@@ -53,12 +56,16 @@ class FileController(viewsets.ModelViewSet):
         extension = "." + uploadFile.name.split(".")[-1]
         uploadFile.name = file.uuid + extension
 
-        uploadParams = {
-            "file": file,
-            "uploadFile": uploadFile,
-            "collection": collection,
-        }
-        Event(EventEnum.UPLOAD_FILE, uploadParams)
+        isUpload = json.loads(params.get("is_upload", "True").lower())
+        isSync = json.loads(params.get("is_sync", "True").lower())
+        if isUpload:
+            uploadParams = {
+                "file": file,
+                "uploadFile": uploadFile,
+                "collection": collection,
+                "isSync": isSync,
+            }
+            Event(EventEnum.UPLOAD_FILE, uploadParams)
 
         return FileResource(file, status=status.HTTP_201_CREATED)
 
