@@ -14,3 +14,7 @@
 - GET Cache
   from django.core.cache import cache
   cache.get('customer_register_css')
+
+- Clear cache ทั้งหมด
+  from django.core.cache import cache
+  cache.clear()
