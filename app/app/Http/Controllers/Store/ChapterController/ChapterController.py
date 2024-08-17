@@ -1,16 +1,17 @@
-﻿from app.Domain.Chapter.Models.Chapter import Chapter
-from app.Domain.Chapter.Services.ChapterService import ChapterService
-from app.Domain.Customer.Models.Customer import Customer
-from app.Enums.StatusEnum import ChapterStatusEnum
-from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
-from app.Http.Resources.Store.ChapterController.ChapterResource import ChapterResource
-from app.Middlewares.AuthenticationMiddleware import AuthenticationMiddleware
-from app.Services.Helpers import setCache
-from django.conf import settings
+﻿from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
 from rest_framework import status, viewsets
+
+from app.Domain.Chapter.Models.Chapter import Chapter
+from app.Domain.Chapter.Services.ChapterService import ChapterService
+from app.Domain.Customer.Models.Customer import Customer
+from app.Enums.CategoryEnum import CategoryEnum
+from app.Enums.StatusEnum import ChapterStatusEnum
+from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
+from app.Http.Resources.Store.ChapterController.ChapterResource import ChapterResource
+from app.Middlewares.AuthenticationMiddleware import AuthenticationMiddleware
 
 
 class ChapterController(viewsets.ModelViewSet):
@@ -29,10 +30,15 @@ class ChapterController(viewsets.ModelViewSet):
             "chapter_number": number,
             "status": ChapterStatusEnum.ACTIVE,
         }
-        chapter: Chapter = ChapterService().findBy(params).first()
+
+        chapterService = ChapterService()
+        chapter: Chapter = chapterService.findBy(params).first()
         if chapter == None:
             raise ResourceNotFoundException({"message": "Chapter does not exist."})
 
-        chapter = ChapterService().update(chapter.id, {"view_count": chapter.view_count + 1})
-        ChapterService().setViewCountCacheByChapter(chapter)
+        chapter = chapterService.update(chapter.id, {"view_count": chapter.view_count + 1})
+        chapterService.setViewCountCacheByChapter(chapter)
+
+        if chapter.type == CategoryEnum.NOVEL:
+            chapter.text = chapterService.loadChapterTextFromStorage(chapter)
         return ChapterResource(chapter, customer, status=status.HTTP_200_OK)

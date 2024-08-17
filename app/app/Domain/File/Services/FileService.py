@@ -1,13 +1,17 @@
 import io
+import json
 import uuid
-from typing import Any, BinaryIO
+from typing import Any, BinaryIO, TextIO
 
 import magic
 from django.db.models import Q
 from django.db.models.query import QuerySet
 
 from app.Domain.File.Models.File import File
+from app.Enums.CollectionEnum import CollectionNameEnum
+from app.Enums.EventEnum import EventEnum
 from app.Enums.ImageMimeTypeEnum import ImageMimeTypeEnum
+from app.Event.Event import Event
 from app.Exceptions.CollectionInvalidException import CollectionInvalidException
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Providers.StorageManager import StorageManager
@@ -107,6 +111,17 @@ class FileService:
         uploadFile.seek(initialPosition)
         return mimeType
 
+    def uploadFileToStorage(self, file: File, uploadFile: TextIO | BinaryIO, collection: dict[str, Any], isSync: bool = True):
+        extension = "." + uploadFile.name.split(".")[-1]
+        uploadFile.name = file.uuid + extension
+        uploadParams = {
+            "file": file,
+            "uploadFile": uploadFile,
+            "collection": collection,
+            "isSync": isSync,
+        }
+        Event(EventEnum.UPLOAD_FILE, uploadParams)
+
     def createUploadFileFromFile(self, file: File):
         response = StorageManager(file).download(None)
         fileData = response.read()
@@ -114,8 +129,30 @@ class FileService:
         uploadFile.name = file.file_name
         uploadFile.size = len(fileData)
         uploadFile.seek(0)
-
         return uploadFile
+
+    def loadTextFile(self, file: File) -> str:
+        response = StorageManager(file).download(None)
+        return response.read().decode("utf-8")
+
+    def createUploadFileFromText(self, text: str, filename: str):
+        uploadFile = io.StringIO(text)
+        uploadFile.name = filename
+        jsonText = json.dumps(text, ensure_ascii=False)
+        uploadFile.size = len(jsonText.encode("utf-8"))
+        uploadFile.seek(0)
+        return uploadFile
+
+    def createAndUploadChapterTextFile(self, text: str, filename: str, collection: dict[str, Any]) -> int:
+        uploadFile = self.createUploadFileFromText(text, filename)
+        file = self.create(uploadFile, collection)
+        self.uploadFileToStorage(file, uploadFile, collection)
+        return file.id
+
+    def updateAndUploadChapterTextFile(self, text: str, file: File, collection: dict[str, Any]) -> int:
+        uploadFile = self.createUploadFileFromText(text, file.file_name)
+        self.uploadFileToStorage(file, uploadFile, collection)
+        return file.id
 
     def getCollectionNamesFromFileIds(self, fileIds: int) -> list[str]:
         return File.objects.filter(id__in=fileIds).distinct().values_list("collection_name")

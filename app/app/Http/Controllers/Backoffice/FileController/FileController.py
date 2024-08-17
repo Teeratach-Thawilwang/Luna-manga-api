@@ -52,20 +52,13 @@ class FileController(viewsets.ModelViewSet):
         if collection is None:
             raise CollectionInvalidException({"message": "Collection Not Found."})
 
-        file = FileService().create(uploadFile, collection)
-        extension = "." + uploadFile.name.split(".")[-1]
-        uploadFile.name = file.uuid + extension
+        fileService = FileService()
+        file = fileService.create(uploadFile, collection)
 
         isUpload = json.loads(params.get("is_upload", "True").lower())
-        isSync = json.loads(params.get("is_sync", "True").lower())
         if isUpload:
-            uploadParams = {
-                "file": file,
-                "uploadFile": uploadFile,
-                "collection": collection,
-                "isSync": isSync,
-            }
-            Event(EventEnum.UPLOAD_FILE, uploadParams)
+            isSync = json.loads(params.get("is_sync", "True").lower())
+            fileService.uploadFileToStorage(file, uploadFile, collection, isSync)
 
         return FileResource(file, status=status.HTTP_201_CREATED)
 

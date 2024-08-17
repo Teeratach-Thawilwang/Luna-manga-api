@@ -8,7 +8,7 @@ class Chapter(models.Model):
     story = models.ForeignKey("Story", on_delete=models.SET_DEFAULT, null=True, default=None)
     name = models.CharField(max_length=150, db_collation="utf8mb4_unicode_ci")
     chapter_number = models.PositiveIntegerField(default=0)
-    text = models.TextField(db_collation="utf8mb4_unicode_ci")
+    text = models.TextField(db_collation="utf8mb4_unicode_ci", null=True, default=None)
     type = models.CharField(max_length=150)
     status = models.CharField(max_length=150)
     view_count = models.PositiveIntegerField(default=0)

@@ -2,6 +2,7 @@ import json
 from sys import modules
 from typing import Any
 
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Sum
 from django.db.models.query import QuerySet
 from django.utils import timezone
@@ -10,11 +11,12 @@ from app.Domain.Banner.Models.Banner import Banner
 from app.Domain.Chapter.Models.Chapter import Chapter
 from app.Domain.Chapter.Models.ChapterReaction import ChapterReaction
 from app.Domain.Customer.Models.Customer import Customer
+from app.Domain.File.Models.Fileable import Fileable
 from app.Domain.Story.Models.Story import Story
 from app.Domain.User.Models.User import User
 from app.Enums.BannerTypeEnum import BannerTypeEnum
 from app.Enums.CategoryEnum import CategoryEnum
-from app.Enums.CollectionEnum import CollectionNameEnum
+from app.Enums.CollectionEnum import CollectionEnum, CollectionNameEnum
 from app.Enums.EventEnum import EventEnum
 from app.Enums.OrderByEnum import OrderByEnum
 from app.Enums.StatusEnum import BannerStatusEnum, ChapterStatusEnum
@@ -25,6 +27,9 @@ from app.Services.Paginator import paginate
 
 if "FileableService" not in modules:
     from app.Domain.File.Services.FileableService import FileableService
+
+if "FileService" not in modules:
+    from app.Domain.File.Services.FileService import FileService
 
 if "BannerService" not in modules:
     from app.Domain.Banner.Services.BannerService import BannerService
@@ -43,7 +48,12 @@ class ChapterService:
 
     def getById(self, id: int) -> Chapter:
         try:
-            return self.querySet.get(pk=id)
+            chapter = self.querySet.get(pk=id)
+
+            if chapter.type == CategoryEnum.NOVEL:
+                chapter.text = self.loadChapterTextFromStorage(chapter)
+
+            return chapter
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
 
@@ -52,32 +62,53 @@ class ChapterService:
 
     def create(self, params: dict[str, Any]) -> Chapter:
         imageId = None
+        chapterType = params.get("type", None)
+        chapterText = params.get("text", None)
 
         if "cover_image_id" in params:
             imageId = params["cover_image_id"]
             del params["cover_image_id"]
 
+        if chapterType == CategoryEnum.NOVEL and chapterText != None:
+            params["text"] = None
+
+        # create chapter
         chapter = self.querySet.create(**params)
 
         if imageId != None:
             FileableService().syncSingleFileable(chapter.id, "chapter", imageId, CollectionNameEnum.CHAPTER_COVER_IMAGE)
+
+        if chapterType == CategoryEnum.NOVEL and chapterText != None:
+            self.createOrUpdateTextFile(chapter, chapterText)
+            chapter.text = chapterText
+
         return chapter
 
     def update(self, id: int, params: dict[str, Any]) -> Chapter:
         imageId = None
+        chapterType = params.get("type", None)
+        chapterText = params.get("text", None)
         params["updated_at"] = timezone.now()
 
         if "cover_image_id" in params:
             imageId = params["cover_image_id"]
             del params["cover_image_id"]
 
+        if chapterType == CategoryEnum.NOVEL and chapterText != None:
+            params["text"] = None
+
         try:
             self.querySet.filter(pk=id).update(**params)
+            chapter = self.querySet.get(pk=id)
 
             if imageId != None:
                 FileableService().syncSingleFileable(id, "chapter", imageId, CollectionNameEnum.CHAPTER_COVER_IMAGE)
 
-            return self.querySet.get(pk=id)
+            if chapterType == CategoryEnum.NOVEL and chapterText != None:
+                self.createOrUpdateTextFile(chapter, chapterText)
+                chapter.text = chapterText
+
+            return chapter
         except Exception as e:
             raise ResourceNotFoundException({"message": e})
 
@@ -103,10 +134,6 @@ class ChapterService:
             if "file_id" in node:
                 fileIds.append(node["file_id"])
         return fileIds
-
-    def createFileableForChapter(self, chapterId: int, chapterText: str):
-        fileIds = self.getFileIdsFromChapterText(chapterText)
-        FileableService().syncFileableByFileIds(chapterId, "chapter", fileIds)
 
     def deleteById(self, id: int) -> None:
         try:
@@ -243,6 +270,10 @@ class ChapterService:
             case ChapterStatusEnum.INACTIVE:
                 return BannerStatusEnum.INACTIVE
 
+    def createFileableForChapter(self, chapterId: int, chapterText: str):
+        fileIds = self.getFileIdsFromChapterText(chapterText)
+        FileableService().syncFileableByFileIds(chapterId, "chapter", fileIds)
+
     def updateOrCreateBannerFromChapter(self, chapter: Chapter, user: User) -> None:
         bannerStatus = self.mapChapterStatusToBannerStatus(chapter.status)
         bannerParams = {
@@ -272,3 +303,28 @@ class ChapterService:
             "imageIds": [],
         }
         Event(EventEnum.SYNC_BANNER_FILEABLE, syncParams)
+
+    def getChapterFileable(self, chapter: Chapter, collectionName: CollectionNameEnum) -> Fileable | None:
+        modelType = ContentType.objects.get(model="chapter")
+        params = {
+            "model_id": chapter.id,
+            "model_type": modelType,
+            "file__collection_name": collectionName,
+        }
+        return FileableService().findBy(params).first()
+
+    def createOrUpdateTextFile(self, chapter: Chapter, chapterText: str):
+        fileable = self.getChapterFileable(chapter.id, CollectionNameEnum.DOCUMENT)
+        collection = CollectionEnum().get(CollectionNameEnum.DOCUMENT)
+        if fileable == None:
+            filename = f"chapter-id-{chapter.id}.txt"
+            fileId = FileService().createAndUploadChapterTextFile(chapterText, filename, collection)
+        else:
+            file = fileable.file
+            fileId = FileService().updateAndUploadChapterTextFile(chapterText, file, collection)
+
+        FileableService().syncSingleFileable(chapter.id, "chapter", fileId, CollectionNameEnum.DOCUMENT)
+
+    def loadChapterTextFromStorage(self, id: int):
+        fileable = self.getChapterFileable(id, CollectionNameEnum.DOCUMENT)
+        return FileService().loadTextFile(fileable.file)
