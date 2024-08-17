@@ -17,7 +17,7 @@ class CategoryController(viewsets.ModelViewSet):
         request.authentication = ["index"]
         super().initial(request, *args, **kwargs)
 
-    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
     def index(self, request):
         IndexRequest(request)
 

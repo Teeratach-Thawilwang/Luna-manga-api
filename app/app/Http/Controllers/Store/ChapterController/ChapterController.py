@@ -21,7 +21,7 @@ class ChapterController(viewsets.ModelViewSet):
         request.authentication = ["show"]
         super().initial(request, *args, **kwargs)
 
-    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
     # @method_decorator(vary_on_headers("Authorization"))
     def show(self, request, slug, number):
         customer: Customer | None = request.user
@@ -41,4 +41,6 @@ class ChapterController(viewsets.ModelViewSet):
 
         if chapter.type == CategoryEnum.NOVEL:
             chapter.text = chapterService.loadChapterTextFromStorage(chapter)
-        return ChapterResource(chapter, customer, status=status.HTTP_200_OK)
+
+        response = ChapterResource(chapter, customer, status=status.HTTP_200_OK)
+        return response
