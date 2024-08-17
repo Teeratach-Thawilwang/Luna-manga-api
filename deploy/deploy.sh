@@ -8,3 +8,4 @@ docker-compose rm app worker --force
 DOCKER_HUB_IMAGE="teeratachdocker/luna_manga_api"
 docker pull $DOCKER_HUB_IMAGE
 docker-compose up -d --build
+docker-compose restart
