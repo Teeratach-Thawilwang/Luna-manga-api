@@ -16,7 +16,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .env:/root/main/.env
-      - ./deploy/uwsgi.ini:/root/main/uwsgi.ini
+      - ./deploy/uwsgi.local.ini:/root/main/uwsgi.ini
       - ./app:/root/main/app
     ports:
       - 8000
