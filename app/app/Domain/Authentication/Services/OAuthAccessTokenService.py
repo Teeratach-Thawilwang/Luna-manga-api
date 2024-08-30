@@ -10,9 +10,9 @@ from app.Domain.Authentication.Models.OAuthAccessToken import OAuthAccessToken
 from app.Domain.Authentication.Models.OAuthClient import OAuthClient
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.User.Models.User import User
-from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Exceptions.TokenExpiredException import TokenExpiredException
 from app.Exceptions.TokenInvalidException import TokenInvalidException
+from app.Exceptions.TokenNotFoundException import TokenNotFoundException
 from app.Services.Helpers import getDatetimeTodayUtc
 
 if "OAuthClientService" not in modules:
@@ -24,7 +24,7 @@ class OAuthAccessTokenService:
         try:
             return OAuthAccessToken.objects.filter(**params).get()
         except Exception as e:
-            raise ResourceNotFoundException({"message": e})
+            raise TokenNotFoundException({"message": e})
 
     def generateToken(self, oAuthClient: OAuthClient, account: Customer | User = None) -> dict[str, Any]:
         uuid4 = str(uuid.uuid4())
@@ -149,4 +149,4 @@ class OAuthAccessTokenService:
             OAuthAccessToken.objects.filter(access_token=token).update(**params)
             return self.getBy({"access_token": token})
         except Exception as e:
-            raise ResourceNotFoundException({"message": e})
+            raise TokenNotFoundException({"message": e})
