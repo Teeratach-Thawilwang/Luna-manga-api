@@ -215,4 +215,7 @@ docker push mydocker/my_image:0.1.0
 
     # หยุดการทำงาน Container ทั้งหมด
     docker stop $(docker ps -a -q)
+
+    # ดู container ทั้งหมด แบบเลือก format
+    docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
