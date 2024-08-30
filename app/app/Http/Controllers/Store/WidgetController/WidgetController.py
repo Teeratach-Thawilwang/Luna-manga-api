@@ -4,6 +4,7 @@ from django.views.decorators.cache import cache_page
 from rest_framework import status, viewsets
 
 from app.Domain.Widget.Services.WidgetService import WidgetService
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
 from app.Enums.StatusEnum import WidgetStatusEnum
 from app.Http.Requests.Store.WidgetController.IndexRequest import IndexRequest
 from app.Http.Requests.Store.WidgetController.WidgetBannersRequest import WidgetBannersRequest
@@ -20,7 +21,7 @@ class WidgetController(viewsets.ModelViewSet):
         request.authentication = ["index", "widgetOnPage", "widgetBanners"]
         super().initial(request, *args, **kwargs)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_WIDGET_INDEX))
     def index(self, request):
         IndexRequest(request)
 
@@ -31,12 +32,12 @@ class WidgetController(viewsets.ModelViewSet):
         widgets = WidgetService().search(params).paginate()
         return WidgetCollectionResource(widgets, status=status.HTTP_200_OK)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_WIDGET_ON_PAGE))
     def widgetOnPage(self, request):
         widgets = WidgetService().getWidgetOnPage()
         return WidgetOnPageResource(widgets, status=status.HTTP_200_OK)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_WIDGET_BANNER))
     def widgetBanners(self, request, id):
         WidgetBannersRequest(request)
 

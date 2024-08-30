@@ -1,15 +1,17 @@
 from sys import modules
 from typing import Any
 
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.query import QuerySet
+
 from app.Domain.File.Models.File import File
 from app.Domain.File.Models.Fileable import Fileable
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
 from app.Enums.CollectionEnum import CollectionNameEnum
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Providers.CloudFrontService import CloudFrontService
 from app.Services.Helpers import getCache, setCache
-from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.db.models.query import QuerySet
 
 if "FileService" not in modules:
     from app.Domain.File.Services.FileService import FileService
@@ -106,8 +108,7 @@ class FileableService:
         }
 
     def transformImagesUsingCloudFrontUrl(self, file: File):
-        key = f"presigned_url_{file.uuid}"
-        seconds = settings.CACHE_PRESIGNED_URL_IN_SECONDS
+        key = f"{CachePagePrefixEnum.PRESIGNED_URL}_{file.uuid}"
         data = getCache(key)
         if data != None:
             return data
@@ -115,6 +116,7 @@ class FileableService:
         cloudFrontService = getCache("cloudfront_service")
         if cloudFrontService == None:
             cloudFrontService = CloudFrontService()
+            seconds = int(settings.CLOUD_FRONT_LINK_EXPIRED_IN_SECOND)
             setCache("cloudfront_service", cloudFrontService, seconds)
 
         originalPresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file)
@@ -130,6 +132,7 @@ class FileableService:
             "thumbnail": thumbnailPresignedUrl,
             "collection_name": file.collection_name,
         }
+        seconds = int(settings.CACHE_PRESIGNED_URL_IN_SECONDS)
         setCache(key, data, seconds)
 
         return data

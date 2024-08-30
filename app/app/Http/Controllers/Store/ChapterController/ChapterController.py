@@ -1,12 +1,10 @@
 ﻿from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
 from rest_framework import status, viewsets
 
 from app.Domain.Chapter.Models.Chapter import Chapter
 from app.Domain.Chapter.Services.ChapterService import ChapterService
 from app.Domain.Customer.Models.Customer import Customer
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
 from app.Enums.CategoryEnum import CategoryEnum
 from app.Enums.StatusEnum import ChapterStatusEnum
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
@@ -22,8 +20,6 @@ class ChapterController(viewsets.ModelViewSet):
         request.authentication = ["show"]
         super().initial(request, *args, **kwargs)
 
-    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
-    # @method_decorator(vary_on_headers("Authorization"))
     def show(self, request, slug, number):
         customer: Customer | None = request.user
         params = {
@@ -40,7 +36,8 @@ class ChapterController(viewsets.ModelViewSet):
         chapter = chapterService.update(chapter.id, {"view_count": chapter.view_count + 1})
         chapterService.setViewCountCacheByChapter(chapter)
 
-        key = f"chapter_show_slug:{slug}_chapter_number:{number}"
+        keyPrefix = CachePagePrefixEnum.STORE_CHAPTER_SHOW
+        key = f"{keyPrefix}slug:{slug}_chapter_number:{number}"
         response = getCache(key, None)
         if response != None:
             return response

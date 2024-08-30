@@ -1,9 +1,12 @@
+from rest_framework import status, viewsets
+
 from app.Domain.WidgetSequence.Services.WidgetSequenceService import WidgetSequenceService
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
 from app.Http.Requests.Backoffice.WidgetSequenceController.UpdateRequest import UpdateRequest
 from app.Http.Resources.Backoffice.WidgetSequenceController.WidgetSequenceCollectionResource import WidgetSequenceCollectionResource
 from app.Middlewares.AuthenticationMiddleware import AuthenticationMiddleware
 from app.Middlewares.UserPermissionMiddleware import UserPermissionMiddleware
-from rest_framework import status, viewsets
+from app.Services.Helpers import clearAllRedisCacheByKeyPrefix
 
 
 class WidgetSequenceController(viewsets.ModelViewSet):
@@ -27,4 +30,9 @@ class WidgetSequenceController(viewsets.ModelViewSet):
 
         params = request.params
         widgetSequence = WidgetSequenceService().updateSequence(params)
+        clearAllRedisCacheByKeyPrefix(CachePagePrefixEnum.STORE_WIDGET_INDEX)
+        clearAllRedisCacheByKeyPrefix(CachePagePrefixEnum.STORE_WIDGET_ON_PAGE)
+        clearAllRedisCacheByKeyPrefix(CachePagePrefixEnum.STORE_WIDGET_BANNER)
+        clearAllRedisCacheByKeyPrefix(CachePagePrefixEnum.PRESIGNED_URL)
+
         return WidgetSequenceCollectionResource({"data": widgetSequence})

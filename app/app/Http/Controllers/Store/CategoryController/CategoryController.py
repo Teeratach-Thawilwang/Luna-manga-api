@@ -4,6 +4,7 @@ from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
 
 from app.Domain.Category.Services.CategoryService import CategoryService
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
 from app.Enums.StatusEnum import CategoryStatusEnum
 from app.Http.Requests.Store.CategoryController.IndexRequest import IndexRequest
 from app.Http.Resources.Store.CategoryController.CategoryCollectionResource import CategoryCollectionResource
@@ -17,7 +18,7 @@ class CategoryController(viewsets.ModelViewSet):
         request.authentication = ["index"]
         super().initial(request, *args, **kwargs)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_CATEGORY_INDEX))
     def index(self, request):
         IndexRequest(request)
 

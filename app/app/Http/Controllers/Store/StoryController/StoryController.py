@@ -5,6 +5,7 @@ from rest_framework import status, viewsets
 
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.Story.Services.StoryService import StoryService
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
 from app.Enums.StatusEnum import StoryStatusEnum
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Http.Requests.Store.StoryController.StorySearchRequest import StorySearchRequest
@@ -20,7 +21,7 @@ class StoryController(viewsets.ModelViewSet):
         request.authentication = ["storySearch", "show"]
         super().initial(request, *args, **kwargs)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SEARCH))
     def storySearch(self, request):
         StorySearchRequest(request)
 
@@ -28,7 +29,7 @@ class StoryController(viewsets.ModelViewSet):
         paginated = StoryService().search(params).paginate()
         return StorySearchCollectionResource(paginated)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SHOW))
     def show(self, request, slug):
         customer: Customer | None = request.user
 
