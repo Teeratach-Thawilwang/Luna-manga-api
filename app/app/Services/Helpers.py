@@ -6,6 +6,8 @@ from django.http import QueryDict
 from django.utils import timezone
 from django.utils.text import slugify
 
+from app.Enums.CachePagePrefixEnum import CachePagePrefixEnum
+
 
 def only(methods):
     mapMethod = {
@@ -90,3 +92,11 @@ def getRequestMeta(request):
         "user_agent": getUserAgent(request),
         "ip_address": getUserIPAddress(request),
     }
+
+
+def clearAllRedisCacheByKeyPrefix(keyPrefix: CachePagePrefixEnum):
+    cache.delete_pattern(f"*{keyPrefix}*")
+
+
+def flushCache():
+    cache.clear()

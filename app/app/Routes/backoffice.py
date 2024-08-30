@@ -1,3 +1,5 @@
+from django.urls import path
+
 from app.Http.Controllers.Backoffice.BannerController.BannerController import BannerController
 from app.Http.Controllers.Backoffice.CategoryController.CategoryController import CategoryController
 from app.Http.Controllers.Backoffice.ChapterController.ChapterController import ChapterController
@@ -6,6 +8,7 @@ from app.Http.Controllers.Backoffice.CustomerGroupController.CustomerGroupContro
 from app.Http.Controllers.Backoffice.CustomerReportController.CustomerReportController import CustomerReportController
 from app.Http.Controllers.Backoffice.DashboardController.DashboardController import DashboardController
 from app.Http.Controllers.Backoffice.FileController.FileController import FileController
+from app.Http.Controllers.Backoffice.FlushCacheController.FlushCacheController import FlushCacheController
 from app.Http.Controllers.Backoffice.OAuthClientController.OAuthClientController import OAuthClientController
 from app.Http.Controllers.Backoffice.PermissionController.PermissionController import PermissionController
 from app.Http.Controllers.Backoffice.RoleController.RoleController import RoleController
@@ -16,7 +19,6 @@ from app.Http.Controllers.Backoffice.UserProfileController.UserProfileController
 from app.Http.Controllers.Backoffice.WidgetController.WidgetController import WidgetController
 from app.Http.Controllers.Backoffice.WidgetSequenceController.WidgetSequenceController import WidgetSequenceController
 from app.Services.Helpers import only
-from django.urls import path
 
 urlpatterns = [
     # SessionController
@@ -69,4 +71,6 @@ urlpatterns = [
     # CustomerReportController
     path("customer-reports", CustomerReportController.as_view(only(["index", "update"]))),
     path("customer-reports/<int:id>", CustomerReportController.as_view(only(["show", "update", "destroy"]))),
+    # FlushCacheController
+    path("flush-cache", FlushCacheController.as_view(only(["index"]))),
 ]

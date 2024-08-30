@@ -7,8 +7,11 @@ CACHES_AVAILABLE = {
         "LOCATION": "cache",
     },
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://:" + env("REDIS_PASSWORD") + "@" + env("REDIS_URL") + ":" + env("REDIS_PORT"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     },
 }
 
