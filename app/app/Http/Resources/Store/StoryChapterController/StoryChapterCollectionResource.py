@@ -24,7 +24,7 @@ class StoryChapterCollectionResource(JsonResponse):
             # In case of every chapter use the same chapter-cover-image
             if fileable == None:
                 fileable = chapter.fileable.select_related("file").filter(file__collection_name=CollectionNameEnum.CHAPTER_COVER_IMAGE).first()
-                print("do herer")
+
             data.append(
                 {
                     "id": chapter.id,
