@@ -10,7 +10,7 @@ class File(models.Model):
     uuid = models.CharField(max_length=255, unique=True)
     file_name = models.CharField(max_length=255, db_collation="utf8mb4_unicode_ci")
     mime_type = models.CharField(max_length=255, db_index=True)
-    collection_name = models.CharField(max_length=255, db_index=True)
+    collection_name = models.CharField(db_index=True, max_length=255)
     conversion = models.TextField(null=True, default=None)
     size_bytes = models.IntegerField(null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)

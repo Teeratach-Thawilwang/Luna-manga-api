@@ -6,7 +6,7 @@ from django.forms.models import model_to_dict
 class Story(models.Model):
     id = models.BigAutoField(primary_key=True)
     customer = models.ForeignKey("Customer", on_delete=models.SET_DEFAULT, null=True, default=None)
-    slug = models.CharField(unique=True, max_length=200, db_collation="utf8mb4_unicode_ci")
+    slug = models.CharField(db_index=True, unique=True, max_length=200, db_collation="utf8mb4_unicode_ci")
     name = models.CharField(unique=True, max_length=150, db_collation="utf8mb4_unicode_ci")
     author_name = models.CharField(max_length=150, db_collation="utf8mb4_unicode_ci", null=True, default=None)
     description = models.TextField(db_collation="utf8mb4_unicode_ci")
