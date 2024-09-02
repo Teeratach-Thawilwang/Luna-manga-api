@@ -87,9 +87,10 @@ class FileableService:
 
     def transformImagesByCollection(self, fileableSet: QuerySet, collectionName: CollectionNameEnum, sideUrl: str = "backoffice", useCloudFront: bool = True) -> list:
         transfromData = []
-        fileables = fileableSet.filter(file__collection_name=collectionName)
-        for fileable in fileables:
+        for fileable in fileableSet:
             file: File = fileable.file
+            if file.collection_name != collectionName:
+                continue
             if useCloudFront:
                 transfromData += [self.transformImagesUsingCloudFrontUrl(file)]
                 continue

@@ -21,6 +21,7 @@ class WidgetBannersResource(JsonResponse):
     def getBannersPaginated(self, widget: Widget, page: int, perPage: int):
         query = [Q(banner__status=BannerStatusEnum.ACTIVE)]
         orderBy = ["id"]
-        bannerPaginated = paginate(page, perPage, widget.widgetbanner_set, query, orderBy)
-        bannerPaginated["data"] = WidgetService().transformBannersFromWidgetBanners(bannerPaginated["data"])
-        return bannerPaginated
+        widgetBannerPaginated = paginate(page, perPage, widget.widgetbanner_set, query, orderBy)
+        widgetBanners = widgetBannerPaginated["data"].prefetch_related("banner__fileable__file")
+        widgetBannerPaginated["data"] = WidgetService().transformBannersFromWidgetBanners(widgetBanners)
+        return widgetBannerPaginated

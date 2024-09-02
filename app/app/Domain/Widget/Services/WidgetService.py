@@ -1,7 +1,7 @@
 from sys import modules
 from typing import Any
 
-from django.db.models import Q, Subquery
+from django.db.models import Min, Q, Subquery
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
@@ -141,7 +141,7 @@ class WidgetService:
 
         return banners
 
-    def transformBannersFromWidgetBanners(self, widgetBanners: list[WidgetBanner]):
+    def transformBannersFromWidgetBanners(self, widgetBanners: QuerySet[WidgetBanner]):
         data = []
         bannerService = BannerService()
         for widgetBanner in widgetBanners:
@@ -156,12 +156,13 @@ class WidgetService:
                     "images": bannerService.transformBannerImages(banner, "store"),
                 }
             )
+
         return data
 
     def transformWidgetOnPage(self, widget: Widget) -> dict[str, any]:
         return {
             "id": widget.id,
-            "sequence": widget.widgetsequence_set.first().sequence,
+            "sequence": widget.first_sequence,
             "title": widget.title,
             "type": widget.type,
             "banners": self.transformBannersFromWidgetBanners(widget.widgetbanner_set.all()),
@@ -178,12 +179,12 @@ class WidgetService:
             WidgetTypeEnum.STORY_WINDOW,
             WidgetTypeEnum.STORY_GROUP,
         ]
-        widgets: list[Widget] = []
+        query = Widget.objects.filter(*querySet, type__in=types)
+        query = query.prefetch_related("widgetsequence_set", "widgetbanner_set__banner__fileable__file")
+        widgets = query.order_by("widgetsequence__sequence").all()
+        widgets = widgets.annotate(first_sequence=Min("widgetsequence__sequence"))
 
-        for type in types:
-            widget = Widget.objects.filter(*querySet, type=type).order_by("widgetsequence__sequence").first()
-            if widget == None:
-                continue
-            widgets.append(self.transformWidgetOnPage(widget))
-
-        return widgets
+        data = []
+        for widget in widgets:
+            data.append(self.transformWidgetOnPage(widget))
+        return data

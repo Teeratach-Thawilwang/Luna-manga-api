@@ -29,7 +29,8 @@ class WidgetController(viewsets.ModelViewSet):
         params["in_widget_sequence"] = True
         params["status"] = [WidgetStatusEnum.ACTIVE]
         params["order_by"] = ["widgetsequence__sequence"]
-        widgets = WidgetService().search(params).paginate()
+        widgetService = WidgetService().prefetch("widgetsequence_set")
+        widgets = widgetService.search(params).paginate()
         return WidgetCollectionResource(widgets, status=status.HTTP_200_OK)
 
     @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_WIDGET_ON_PAGE))

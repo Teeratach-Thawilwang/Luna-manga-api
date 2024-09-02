@@ -146,19 +146,20 @@ class BannerService:
 
     def transformBannerImages(self, banner: Banner, sideUrl: str):
         fileableService = FileableService()
+        fileable = banner.fileable.all()
         match banner.type:
             case BannerTypeEnum.CHAPTER:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.CHAPTER_COVER_IMAGE, sideUrl)
+                return fileableService.transformImagesByCollection(fileable, CollectionNameEnum.CHAPTER_COVER_IMAGE, sideUrl)
             case BannerTypeEnum.STORY:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.STORY_IMAGE, sideUrl)
+                return fileableService.transformImagesByCollection(fileable, CollectionNameEnum.STORY_IMAGE, sideUrl)
             case BannerTypeEnum.STORY_WINDOW:
-                images = fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_STORY_WINDOW_1, sideUrl)
-                images += fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_STORY_WINDOW_2, sideUrl)
-                images += fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_STORY_WINDOW_3, sideUrl)
+                images = fileableService.transformImagesByCollection(fileable, CollectionNameEnum.BANNER_STORY_WINDOW_1, sideUrl)
+                images += fileableService.transformImagesByCollection(fileable, CollectionNameEnum.BANNER_STORY_WINDOW_2, sideUrl)
+                images += fileableService.transformImagesByCollection(fileable, CollectionNameEnum.BANNER_STORY_WINDOW_3, sideUrl)
                 return images
             case BannerTypeEnum.ADVERTISEMENT_SMALL:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_ADVERTISEMENT_SMALL, sideUrl)
+                return fileableService.transformImagesByCollection(fileable, CollectionNameEnum.BANNER_ADVERTISEMENT_SMALL, sideUrl)
             case BannerTypeEnum.ADVERTISEMENT_MEDIUM:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_ADVERTISEMENT_MEDIUM, sideUrl)
+                return fileableService.transformImagesByCollection(fileable, CollectionNameEnum.BANNER_ADVERTISEMENT_MEDIUM, sideUrl)
             case BannerTypeEnum.ADVERTISEMENT_GROUP:
-                return fileableService.transformImagesByCollection(banner.fileable, CollectionNameEnum.BANNER_ADVERTISEMENT_GROUP, sideUrl)
+                return fileableService.transformImagesByCollection(fileable, CollectionNameEnum.BANNER_ADVERTISEMENT_GROUP, sideUrl)
