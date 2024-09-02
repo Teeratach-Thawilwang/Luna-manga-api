@@ -1,6 +1,7 @@
+from django.http import JsonResponse
+
 from app.Domain.File.Services.FileableService import FileableService
 from app.Enums.CollectionEnum import CollectionNameEnum
-from django.http import JsonResponse
 
 
 class CategoryCollectionResource(JsonResponse):
@@ -10,13 +11,14 @@ class CategoryCollectionResource(JsonResponse):
 
     def toArray(self):
         data = []
+        fileableService = FileableService()
         for category in self.data["data"]:
             data.append(
                 {
                     "id": category.id,
                     "name": category.name,
                     "type": category.type,
-                    "images": FileableService().transformImagesByCollection(category.fileable, CollectionNameEnum.CATEGORY_IMAGE, "store"),
+                    "images": fileableService.transformImagesByCollection(category.fileable.all(), CollectionNameEnum.CATEGORY_IMAGE, "store"),
                 }
             )
         self.data["data"] = data
