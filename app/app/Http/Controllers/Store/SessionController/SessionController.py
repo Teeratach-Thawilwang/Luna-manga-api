@@ -16,6 +16,8 @@ from app.Services.Helpers import getRequestMeta
 
 class SessionController(viewsets.ModelViewSet):
     authentication_classes = [AuthenticationMiddleware]
+    customerService = CustomerService()
+    oAuthAccessTokenService = OAuthAccessTokenService()
 
     def initial(self, request, *args, **kwargs):
         request.authentication = ["revoke"]
@@ -34,20 +36,20 @@ class SessionController(viewsets.ModelViewSet):
 
         params = request.params
         meta = getRequestMeta(request)
-        customer = CustomerService().getByEmail(params["email"])
-        CustomerService().checkPassword(customer, params["password"])
+        customer = self.customerService.getByEmail(params["email"])
+        self.customerService.checkPassword(customer, params["password"])
 
-        if not CustomerService().isVerifiedEmail(customer):
+        if not self.customerService.isVerifiedEmail(customer):
             CustomerRegisterEmailNotification(customer)
             raise InActiveAccountException({"message": "Need verify email."})
 
-        if not CustomerService().isActive(customer):
+        if not self.customerService.isActive(customer):
             raise InActiveAccountException({"message": "Inactive Account"})
 
-        if CustomerService().isDelete(customer):
+        if self.customerService.isDelete(customer):
             raise InActiveAccountException({"message": "Account was deleted."})
 
-        oAuthToken = OAuthAccessTokenService().createAccountToken(params["client_id"], customer, meta)
+        oAuthToken = self.oAuthAccessTokenService.createAccountToken(params["client_id"], customer, meta)
 
         return TokenResource(oAuthToken, status=status.HTTP_200_OK)
 
@@ -60,11 +62,11 @@ class SessionController(viewsets.ModelViewSet):
 
         params = request.params
         meta = getRequestMeta(request)
-        oAuthToken = OAuthAccessTokenService().refreshToken(params["refresh_token"], meta)
+        oAuthToken = self.oAuthAccessTokenService.refreshToken(params["refresh_token"], meta)
         return TokenResource(oAuthToken, status=status.HTTP_200_OK)
 
     def revoke(self, request):
         auth = request.auth
 
-        OAuthAccessTokenService().revokeToken(auth.access_token)
+        self.oAuthAccessTokenService.revokeToken(auth.access_token)
         return HttpResponse(status=status.HTTP_204_NO_CONTENT)

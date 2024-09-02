@@ -21,9 +21,7 @@ INSTALLED_APPS = [
     # "django.contrib.sessions",
     # "django.contrib.messages",
     # "django.contrib.staticfiles",
-    # "corsheaders",
     "django_q",
-    "sslserver",
     "app",
 ]
 
@@ -36,7 +34,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
+    # "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
     "app.Middlewares.RequestParserMiddleware.RequestParserMiddleware",
 ]
 
@@ -55,4 +53,8 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+PASSWORD_HASHERS = [
+    "app.Providers.HashProvider.HashProvider",
 ]

@@ -27,7 +27,6 @@ class OAuthAccessTokenService:
             raise TokenNotFoundException({"message": e})
 
     def generateToken(self, oAuthClient: OAuthClient, account: Customer | User = None) -> dict[str, Any]:
-        uuid4 = str(uuid.uuid4())
         issueAt = timezone.now()
         midnighTodaytUTC = getDatetimeTodayUtc()
 
@@ -35,13 +34,12 @@ class OAuthAccessTokenService:
         refreshTokenExpiredAt = midnighTodaytUTC + timezone.timedelta(days=7)
 
         payload = {
-            "uuid": uuid4,
             "client_id": oAuthClient.client_id,
             "created_at": issueAt.timestamp(),
         }
 
         accessTokenPayload = payload
-        refreshTokenPayload = payload
+        refreshTokenPayload = payload.copy()
 
         accessTokenPayload["expired_at"] = accessTokenExpiredAt.timestamp()
         refreshTokenPayload["expired_at"] = refreshTokenExpiredAt.timestamp()
