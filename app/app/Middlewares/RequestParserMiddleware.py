@@ -12,6 +12,9 @@ def RequestParserMiddleware(next):
         if content_type.startswith("multipart/form-data"):
             requestBody = request.POST.dict()
 
+        elif content_type.startswith("application/x-www-form-urlencoded"):
+            requestBody = request.POST.dict()
+
         elif request.body:
             requestBody = json.loads(request.body)
 
