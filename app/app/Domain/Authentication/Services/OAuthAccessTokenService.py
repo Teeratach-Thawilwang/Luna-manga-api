@@ -116,7 +116,7 @@ class OAuthAccessTokenService:
         return timeNow > timeStamp
 
     def isValidTokenFormat(self, token: Any) -> bool:
-        if ("uuid" in token) and ("created_at" in token) and ("expired_at" in token):
+        if ("created_at" in token) and ("expired_at" in token):
             return True
         return False
 
