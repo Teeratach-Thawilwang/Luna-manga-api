@@ -5,8 +5,11 @@ from pathlib import Path
 MAIN_DIR = str(Path(__file__).resolve().parent.parent.parent).replace("\\", "/") + "/"
 BASE_DIR = MAIN_DIR + "app/"
 STORAGE_DIR = MAIN_DIR + "storage/"
-TEMPORARY_DIR = MAIN_DIR + "storage/temporary/"
+TEMPORARY_DIR = STORAGE_DIR + "temporary/"
 TEMPLATES_DIR = BASE_DIR + "Templates/"
+
+STATIC_URL = "/static/"
+STATIC_ROOT = STORAGE_DIR + "static"
 
 
 def env(key, default=None):

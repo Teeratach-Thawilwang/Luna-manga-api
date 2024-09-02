@@ -12,3 +12,5 @@ urlpatterns = [
     path("backoffice/", include("app.Routes.backoffice")),
     path("", healthCheck),
 ]
+
+urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

@@ -1,0 +1,40 @@
+- Document
+    https://pypi.org/project/django-silk/
+
+- Setup
+    1. ติดตั้ง django-silk
+        > docker-compose exec app pip install django-silk
+
+    2. เพิ่ม setting ใน app/Settings/apps.py
+
+        MIDDLEWARE = [
+            ...
+            'silk.middleware.SilkyMiddleware',
+            ...
+        ]
+
+        INSTALLED_APPS = (
+            ...
+            'silk'
+        )
+    
+    3. ใช้ DEBUG=True
+
+    4. แก้ไขไฟล์ wsgi.py
+
+        from django.conf import settings
+        from django.contrib.staticfiles.handlers import StaticFilesHandler
+
+        if settings.DEBUG:
+            application = StaticFilesHandler(get_wsgi_application())
+        else:
+            application = get_wsgi_application()
+
+    5. migrate silk table
+        > docker-compose exec app python manage.py migrate
+    
+    6. สร้าง static file สำหรับ route /silk
+        > docker-compose exec app python manage.py collectstatic
+
+- Monitor
+    เปิดเว็ป http://api.dev.luna-manga.com/silk

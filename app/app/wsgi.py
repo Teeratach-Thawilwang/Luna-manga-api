@@ -11,6 +11,8 @@ import os
 import sys
 
 import dotenv
+from django.conf import settings
+from django.contrib.staticfiles.handlers import StaticFilesHandler
 from django.core.wsgi import get_wsgi_application
 
 dotenv.load_dotenv()
@@ -24,4 +26,7 @@ else:
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 
-application = get_wsgi_application()
+if settings.DEBUG:
+    application = StaticFilesHandler(get_wsgi_application())
+else:
+    application = get_wsgi_application()

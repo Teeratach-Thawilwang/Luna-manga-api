@@ -20,9 +20,10 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     # "django.contrib.sessions",
     # "django.contrib.messages",
-    # "django.contrib.staticfiles",
+    "django.contrib.staticfiles",
     "django_q",
     "app",
+    "silk",
 ]
 
 if env("APP_ENV") != "test":
@@ -35,6 +36,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
+    "silk.middleware.SilkyMiddleware",
     "app.Middlewares.RequestParserMiddleware.RequestParserMiddleware",
 ]
 
