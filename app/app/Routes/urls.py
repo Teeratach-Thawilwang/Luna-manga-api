@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.urls import include, path
 from rest_framework import status
@@ -13,4 +14,5 @@ urlpatterns = [
     path("", healthCheck),
 ]
 
-urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
+if settings.APP_ENV == "dev":
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

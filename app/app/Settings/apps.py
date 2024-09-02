@@ -1,5 +1,6 @@
 from .path import STORAGE_DIR, env
 
+APP_ENV = env("APP_ENV")
 APP_URL = env("APP_URL")
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = True if env("DEBUG") == "True" else False
@@ -26,7 +27,7 @@ INSTALLED_APPS = [
     "silk",
 ]
 
-if env("APP_ENV") != "test":
+if APP_ENV != "test":
     INSTALLED_APPS.append("corsheaders")
 
 MIDDLEWARE = [
@@ -36,10 +37,11 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
-    "silk.middleware.SilkyMiddleware",
     "app.Middlewares.RequestParserMiddleware.RequestParserMiddleware",
 ]
 
+if APP_ENV == "dev":
+    MIDDLEWARE.append("silk.middleware.SilkyMiddleware")
 
 TEMPLATES = [
     {
