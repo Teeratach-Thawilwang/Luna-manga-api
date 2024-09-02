@@ -19,7 +19,7 @@ class StoryChapterController(viewsets.ModelViewSet):
 
         super().initial(request, *args, **kwargs)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_CHAPTER_INDEX))
+    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_CHAPTER_INDEX))
     def index(self, request, slug):
         IndexRequest(request)
 

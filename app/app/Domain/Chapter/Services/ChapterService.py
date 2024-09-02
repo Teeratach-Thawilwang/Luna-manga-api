@@ -201,7 +201,6 @@ class ChapterService:
         return self
 
     def paginate(self) -> list:
-        self.prefetch("fileable__file")
         return paginate(self.page, self.perPage, self.querySet, self.query, self.orderBy)
 
     def getScore(self, chapter: Chapter) -> int:
