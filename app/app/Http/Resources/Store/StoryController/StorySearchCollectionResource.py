@@ -1,8 +1,10 @@
+from django.db.models import Sum
+from django.http import JsonResponse
+
 from app.Domain.File.Services.FileableService import FileableService
 from app.Domain.Story.Models.Story import Story
 from app.Domain.Story.Services.StoryService import StoryService
 from app.Enums.CollectionEnum import CollectionNameEnum
-from django.http import JsonResponse
 
 
 class StorySearchCollectionResource(JsonResponse):
@@ -13,19 +15,22 @@ class StorySearchCollectionResource(JsonResponse):
     def toArray(self):
         data = []
         storyService = StoryService()
-        for story in self.data["data"]:
+        fileableService = FileableService()
+        stories = self.data["data"].prefetch_related("storyreaction_set", "chapter_set", "fileable__file").all()
+        stories = stories.annotate(sum_view_count=Sum("chapter__view_count"))
+
+        for story in stories:
             data.append(
                 {
                     "id": story.id,
                     "slug": story.slug,
                     "name": story.name,
                     "type": story.type,
-                    # "author": storyService.getAuthor(story.customer),
                     "author": self.getAuthor(story),
                     "rating_score": storyService.getRating(story),
-                    "view_count": storyService.getViewCountFromChapter(story),
-                    "images": FileableService().transformImagesByCollection(story.fileable, CollectionNameEnum.STORY_IMAGE, "store"),
-                    "categories": storyService.transformCategories(story.categories.all()),
+                    "view_count": story.sum_view_count,
+                    "images": fileableService.transformImagesByCollection(story.fileable.all(), CollectionNameEnum.STORY_IMAGE, "store"),
+                    # "categories": storyService.transformCategories(story.categories.all()),
                 }
             )
         self.data["data"] = data

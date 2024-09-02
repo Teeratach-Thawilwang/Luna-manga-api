@@ -182,7 +182,6 @@ class StoryService:
         return self
 
     def paginate(self) -> list:
-        self.prefetch("customer", "storyreaction_set", "categories", "fileable__file")
         return paginate(self.page, self.perPage, self.querySet, self.query, self.orderBy)
 
     def addCategories(self, story: Story, categories: list[Category]) -> None:
@@ -251,7 +250,7 @@ class StoryService:
                     "id": category.id,
                     "name": category.name,
                     "type": category.type,
-                    "images": fileableService.transformImagesByCollection(category.fileable, CollectionNameEnum.CATEGORY_IMAGE, "store"),
+                    "images": fileableService.transformImagesByCollection(category.fileable.all(), CollectionNameEnum.CATEGORY_IMAGE, "store"),
                 }
             )
         return data

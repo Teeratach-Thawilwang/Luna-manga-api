@@ -21,15 +21,16 @@ class StoryController(viewsets.ModelViewSet):
         request.authentication = ["storySearch", "show"]
         super().initial(request, *args, **kwargs)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SEARCH))
+    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SEARCH))
     def storySearch(self, request):
         StorySearchRequest(request)
 
         params = request.params
-        paginated = StoryService().search(params).paginate()
+        storyService = StoryService().prefetch("storyreaction_set", "chapter_set", "fileable__file")
+        paginated = storyService.search(params).paginate()
         return StorySearchCollectionResource(paginated)
 
-    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SHOW))
+    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SHOW))
     def show(self, request, slug):
         customer: Customer | None = request.user
 
@@ -37,8 +38,9 @@ class StoryController(viewsets.ModelViewSet):
             "slug": slug,
             "status__in": [StoryStatusEnum.ONGOING, StoryStatusEnum.FINISHED],
         }
-        story = StoryService().findBy(params).first()
-        if story == None:
+
+        story = StoryService().findBy(params)
+        if len(story) == 0:
             raise ResourceNotFoundException({"message": "Story does not exist."})
 
         return StoryResource(story, customer, status=status.HTTP_200_OK)
