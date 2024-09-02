@@ -1,9 +1,10 @@
 **/__pycache__/*
 **/*.pyc
-main/storage/*.key
-main/storage/*.pem
-main/storage/temporary/*
-main/storage/local/*
+app/storage/*.key
+app/storage/*.pem
+app/storage/temporary/*
+app/storage/local/*
+app/storage/static/silk/*
 .ignore_file/*
 .gitlog
 .vscode
