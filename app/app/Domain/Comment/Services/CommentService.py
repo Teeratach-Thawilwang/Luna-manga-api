@@ -1,15 +1,16 @@
 from sys import modules
 from typing import Any
 
+from django.db.models import Q, Sum
+from django.db.models.query import QuerySet
+from django.utils import timezone
+
 from app.Domain.Comment.Models.Comment import Comment
 from app.Domain.Comment.Models.CommentReaction import CommentReaction
 from app.Domain.Customer.Models.Customer import Customer
 from app.Enums.CollectionEnum import CollectionNameEnum
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Services.Paginator import paginate
-from django.db.models import Q, Sum
-from django.db.models.query import QuerySet
-from django.utils import timezone
 
 if "FileableService" not in modules:
     from app.Domain.File.Services.FileableService import FileableService
@@ -105,18 +106,28 @@ class CommentService:
         return paginate(self.page, self.perPage, self.querySet, self.query, self.orderBy)
 
     def transformReactionByCommentAndCustomer(self, comment: Comment, customer: Customer | None) -> dict[str]:
-        reactionSum: dict[str] = comment.commentreaction_set.aggregate(Sum("like"), Sum("dislike"))
-        like = reactionSum["like__sum"]
-        like = 0 if like == None else like
+        if hasattr(comment, "like__sum") and hasattr(comment, "dislike__sum"):
+            like = comment.like__sum
+            dislike = comment.dislike__sum
+        else:
+            reactionSum: dict[str] = comment.commentreaction_set.aggregate(Sum("like"), Sum("dislike"))
+            like = reactionSum["like__sum"]
+            dislike = reactionSum["dislike__sum"]
 
-        dislike = reactionSum["dislike__sum"]
+        like = 0 if like == None else like
         dislike = 0 if dislike == None else dislike
 
         if customer == None:
             isLiked = False
             isDisliked = False
         else:
-            commentReaction = comment.commentreaction_set.filter(customer_id=customer.id).first()
+            commentReactions = comment.commentreaction_set.all()
+            commentReaction = None
+            for reaction in commentReactions:
+                if reaction.customer_id == customer.id:
+                    commentReaction = reaction
+                    break
+
             if commentReaction == None:
                 isLiked = False
                 isDisliked = False
@@ -141,5 +152,5 @@ class CommentService:
         return {
             "id": customer.id,
             "display_name": displayName,
-            "images": FileableService().transformImagesByCollection(customer.fileable, CollectionNameEnum.PROFILE_IMAGE, "store"),
+            "images": FileableService().transformImagesByCollection(customer.fileable.all(), CollectionNameEnum.PROFILE_IMAGE, "store"),
         }

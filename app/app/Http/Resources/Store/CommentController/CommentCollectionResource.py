@@ -1,7 +1,9 @@
+from django.db.models import Sum
+from django.http import JsonResponse
+
 from app.Domain.Comment.Services.CommentService import CommentService
 from app.Domain.Customer.Models.Customer import Customer
 from app.Services.LocalTime import localTime
-from django.http import JsonResponse
 
 
 class CommentCollectionResource(JsonResponse):
@@ -12,7 +14,11 @@ class CommentCollectionResource(JsonResponse):
     def toArray(self, customer: Customer | None):
         data = []
         commentService = CommentService()
-        for comment in self.data["data"]:
+        comments = self.data["data"].prefetch_related("customer__fileable__file", "commentreaction_set")
+        comments = comments.annotate(like__sum=Sum("commentreaction__like"))
+        comments = comments.annotate(dislike__sum=Sum("commentreaction__dislike"))
+
+        for comment in comments:
             data.append(
                 {
                     "id": comment.id,

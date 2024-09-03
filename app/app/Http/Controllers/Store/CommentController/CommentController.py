@@ -1,4 +1,7 @@
-﻿from app.Domain.Comment.Services.CommentService import CommentService
+﻿from django.http import HttpResponse
+from rest_framework import status, viewsets
+
+from app.Domain.Comment.Services.CommentService import CommentService
 from app.Domain.Customer.Models.Customer import Customer
 from app.Exceptions.PermissionException import PermissionException
 from app.Http.Requests.Store.CommentController.IndexRequest import IndexRequest
@@ -7,8 +10,6 @@ from app.Http.Requests.Store.CommentController.UpdateRequest import UpdateReques
 from app.Http.Resources.Store.CommentController.CommentCollectionResource import CommentCollectionResource
 from app.Http.Resources.Store.CommentController.CommentResource import CommentResource
 from app.Middlewares.AuthenticationMiddleware import AuthenticationMiddleware
-from django.http import HttpResponse
-from rest_framework import status, viewsets
 
 
 class CommentController(viewsets.ModelViewSet):
@@ -50,7 +51,8 @@ class CommentController(viewsets.ModelViewSet):
         if customer == None:
             raise PermissionException({"message": "You have no permission."})
 
-        comment = CommentService().getById(id)
+        commentService = CommentService()
+        comment = commentService.getById(id)
         if comment.customer.id != customer.id:
             raise PermissionException({"message": "You have no permission."})
 
@@ -60,7 +62,7 @@ class CommentController(viewsets.ModelViewSet):
             "chapter_id": reqParams["chapter_id"],
             "text": reqParams["message"],
         }
-        comment = CommentService().update(comment.id, params)
+        comment = commentService.update(comment.id, params)
 
         return CommentResource(comment, customer, status=status.HTTP_200_OK)
 
@@ -69,9 +71,10 @@ class CommentController(viewsets.ModelViewSet):
         if customer == None:
             raise PermissionException({"message": "You have no permission."})
 
-        comment = CommentService().getById(id)
+        commentService = CommentService()
+        comment = commentService.getById(id)
         if comment.customer.id != customer.id:
             raise PermissionException({"message": "You have no permission."})
 
-        CommentService().deleteById(id)
+        commentService.deleteById(id)
         return HttpResponse(status=status.HTTP_200_OK)
