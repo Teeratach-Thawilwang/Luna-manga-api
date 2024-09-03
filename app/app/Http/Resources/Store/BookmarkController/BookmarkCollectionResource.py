@@ -1,8 +1,10 @@
+from django.db.models import Sum
+from django.http import JsonResponse
+
 from app.Domain.File.Services.FileableService import FileableService
 from app.Domain.Story.Models.Story import Story
 from app.Domain.Story.Services.StoryService import StoryService
 from app.Enums.CollectionEnum import CollectionNameEnum
-from django.http import JsonResponse
 
 
 class BookmarkCollectionResource(JsonResponse):
@@ -13,20 +15,42 @@ class BookmarkCollectionResource(JsonResponse):
     def toArray(self):
         data = []
         storyService = StoryService()
-        for bookmark in self.data["data"]:
+        fileableService = FileableService()
+        bookmarkStories = (
+            self.data["data"]
+            .prefetch_related(
+                "story",
+                "story__customer",
+                "story__storyreaction_set",
+                "story__fileable__file",
+                "story__categories__fileable__file",
+            )
+            .all()
+        )
+        bookmarkStories = bookmarkStories.annotate(sum_view_count=Sum("story__chapter__view_count"))
+        bookmarkStories = bookmarkStories.annotate(like__sum=Sum("story__storyreaction__like"))
+
+        for bookmark in bookmarkStories:
             story: Story = bookmark.story
+            setattr(story, "like__sum", bookmark.like__sum)
             data.append(
                 {
                     "id": story.id,
                     "slug": story.slug,
                     "name": story.name,
                     "type": story.type,
-                    "author": storyService.getAuthor(story.customer),
+                    "author": self.getAuthor(story),
                     "rating_score": storyService.getRating(story),
-                    "view_count": storyService.getViewCountFromChapter(story),
-                    "images": FileableService().transformImagesByCollection(story.fileable, CollectionNameEnum.STORY_IMAGE, "store"),
+                    "view_count": bookmark.sum_view_count,
+                    "images": fileableService.transformImagesByCollection(story.fileable.all(), CollectionNameEnum.STORY_IMAGE, "store"),
                     "categories": storyService.transformCategories(story.categories.all()),
                 }
             )
         self.data["data"] = data
         return self.data
+
+    def getAuthor(self, story: Story):
+        return {
+            "id": 1,
+            "display_name": story.author_name,
+        }

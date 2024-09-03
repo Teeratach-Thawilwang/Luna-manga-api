@@ -222,7 +222,10 @@ class StoryService:
         if totalReaction == 0:
             return 0
 
-        like = story.storyreaction_set.aggregate(Sum("like"))["like__sum"]
+        if hasattr(story, "like__sum"):
+            like = story.like__sum
+        else:
+            like = story.storyreaction_set.aggregate(Sum("like"))["like__sum"]
         like = 0 if like == None else like
         return float("{:.2f}".format(like / totalReaction))
 
