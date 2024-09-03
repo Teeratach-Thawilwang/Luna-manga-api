@@ -18,6 +18,7 @@ class StorySearchCollectionResource(JsonResponse):
         fileableService = FileableService()
         stories = self.data["data"].prefetch_related("storyreaction_set", "chapter_set", "fileable__file").all()
         stories = stories.annotate(sum_view_count=Sum("chapter__view_count"))
+        stories = stories.annotate(like__sum=Sum("storyreaction__like"))
 
         for story in stories:
             data.append(
