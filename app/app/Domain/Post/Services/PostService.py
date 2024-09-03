@@ -1,6 +1,10 @@
 from sys import modules
 from typing import Any
 
+from django.db.models import Q, Sum
+from django.db.models.query import QuerySet
+from django.utils import timezone
+
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.Post.Models.Post import Post
 from app.Domain.Post.Models.PostReaction import PostReaction
@@ -8,9 +12,6 @@ from app.Enums.CollectionEnum import CollectionNameEnum
 from app.Enums.OrderByEnum import OrderByEnum
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
 from app.Services.Paginator import paginate
-from django.db.models import Q, Sum
-from django.db.models.query import QuerySet
-from django.utils import timezone
 
 if "FileableService" not in modules:
     from app.Domain.File.Services.FileableService import FileableService
@@ -112,18 +113,28 @@ class PostService:
         return paginate(self.page, self.perPage, self.querySet, self.query, self.orderBy)
 
     def transformReactionByPostAndCustomer(self, post: Post, customer: Customer | None) -> dict[str]:
-        reactionSum: dict[str] = post.postreaction_set.aggregate(Sum("like"), Sum("dislike"))
-        like = reactionSum["like__sum"]
-        like = 0 if like == None else like
+        if hasattr(post, "like__sum") and hasattr(post, "dislike__sum"):
+            like = post.like__sum
+            dislike = post.dislike__sum
+        else:
+            reactionSum: dict[str] = post.postreaction_set.aggregate(Sum("like"), Sum("dislike"))
+            like = reactionSum["like__sum"]
+            dislike = reactionSum["dislike__sum"]
 
-        dislike = reactionSum["dislike__sum"]
+        like = 0 if like == None else like
         dislike = 0 if dislike == None else dislike
 
         if customer == None:
             isLiked = False
             isDisliked = False
         else:
-            postReaction = post.postreaction_set.filter(customer_id=customer.id).first()
+            postReactions = post.postreaction_set.all()
+            postReaction = None
+            for reaction in postReactions:
+                if reaction.customer_id == customer.id:
+                    postReaction = reaction
+                    break
+
             if postReaction == None:
                 isLiked = False
                 isDisliked = False
@@ -148,5 +159,5 @@ class PostService:
         return {
             "id": customer.id,
             "display_name": displayName,
-            "images": FileableService().transformImagesByCollection(customer.fileable, CollectionNameEnum.PROFILE_IMAGE, "store"),
+            "images": FileableService().transformImagesByCollection(customer.fileable.all(), CollectionNameEnum.PROFILE_IMAGE, "store"),
         }

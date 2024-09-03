@@ -1,7 +1,9 @@
+from django.db.models import Sum
+from django.http import JsonResponse
+
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.Post.Services.PostService import PostService
 from app.Services.LocalTime import localTime
-from django.http import JsonResponse
 
 
 class PostCollectionResource(JsonResponse):
@@ -12,7 +14,11 @@ class PostCollectionResource(JsonResponse):
     def toArray(self, customer: Customer | None):
         data = []
         postService = PostService()
-        for post in self.data["data"]:
+        posts = self.data["data"].prefetch_related("customer__fileable__file", "postreaction_set")
+        posts = posts.annotate(like__sum=Sum("postreaction__like"))
+        posts = posts.annotate(dislike__sum=Sum("postreaction__dislike"))
+
+        for post in posts:
             data.append(
                 {
                     "id": post.id,
