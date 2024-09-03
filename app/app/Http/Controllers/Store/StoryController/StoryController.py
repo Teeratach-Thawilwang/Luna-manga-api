@@ -21,7 +21,7 @@ class StoryController(viewsets.ModelViewSet):
         request.authentication = ["storySearch", "show"]
         super().initial(request, *args, **kwargs)
 
-    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SEARCH))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SEARCH))
     def storySearch(self, request):
         StorySearchRequest(request)
 
@@ -30,7 +30,7 @@ class StoryController(viewsets.ModelViewSet):
         paginated = storyService.search(params).paginate()
         return StorySearchCollectionResource(paginated)
 
-    # @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SHOW))
+    @method_decorator(cache_page(settings.CACHE_PAGE_IN_SECONDS, key_prefix=CachePagePrefixEnum.STORE_STORY_SHOW))
     def show(self, request, slug):
         customer: Customer | None = request.user
 

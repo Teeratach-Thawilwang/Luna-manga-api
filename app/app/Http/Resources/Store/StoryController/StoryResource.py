@@ -1,4 +1,5 @@
 from django.db.models import Sum
+from django.db.models.query import QuerySet
 from django.http import JsonResponse
 
 from app.Domain.Customer.Models.Customer import Customer
@@ -9,9 +10,11 @@ from app.Enums.CollectionEnum import CollectionNameEnum
 
 
 class StoryResource(JsonResponse):
-    def __init__(self, story: Story, customer: Customer | None, status=200, safe=False, json_dumps_params=None, **kwargs):
+    def __init__(self, story: QuerySet[Story], customer: Customer | None, status=200, safe=False, json_dumps_params=None, **kwargs):
         storyService = StoryService()
+        story = story.prefetch_related("categories__fileable__file")
         story = story.annotate(sum_view_count=Sum("chapter__view_count")).all()[0]
+        categories = storyService.transformCategories(story.categories.all())
 
         self.data = {
             "id": story.id,
@@ -23,7 +26,7 @@ class StoryResource(JsonResponse):
             "reaction": storyService.transformReactionByStoryAndCustomer(story, customer),
             "author": self.getAuthor(story),
             "images": FileableService().transformImagesByCollection(story.fileable.all(), CollectionNameEnum.STORY_IMAGE, "store"),
-            # "categories": storyService.transformCategories(story.categories.all()),
+            "categories": categories,
             "is_bookmark": storyService.isBookmark(story, customer),
         }
         super().__init__(self.data, status=status, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
