@@ -26,6 +26,6 @@ class CategoryStoryController(viewsets.ModelViewSet):
         params = request.params
         params["category_id"] = id
         params["status__in"] = [StoryStatusEnum.ONGOING, StoryStatusEnum.FINISHED]
-        storyService = StoryService().prefetch("storyreaction_set", "chapter_set", "fileable__file")
+        storyService = StoryService().prefetch("storyreaction_set", "fileable__file")
         storiesPaginated = storyService.search(params).paginate()
         return CategoryStoryCollectionResource(storiesPaginated)
