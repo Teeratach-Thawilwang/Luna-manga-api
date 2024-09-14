@@ -5,8 +5,8 @@ from django.forms.models import model_to_dict
 
 class Banner(models.Model):
     id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=150, db_collation="utf8mb4_unicode_ci")
-    title = models.CharField(max_length=150, db_collation="utf8mb4_unicode_ci")
+    name = models.CharField(max_length=300, db_collation="utf8mb4_unicode_ci")
+    title = models.CharField(max_length=300, db_collation="utf8mb4_unicode_ci")
     type = models.CharField(max_length=150)
     link = models.CharField(max_length=300, db_collation="utf8mb4_unicode_ci")
     status = models.CharField(max_length=30, default="inactive")
