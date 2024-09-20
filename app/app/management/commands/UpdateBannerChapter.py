@@ -25,6 +25,7 @@ class Command(BaseCommand):
 
         user = User.objects.get(pk=1)
         chapters = Chapter.objects.select_related("story").values("id", "name", "status", "chapter_number", "story__name", "story__slug").all()[startIndex:stopIndex]
+        chapterService = ChapterService()
         for chapter in chapters:
             chapterMap = ChapterMock(
                 id=chapter["id"],
@@ -33,7 +34,7 @@ class Command(BaseCommand):
                 chapterNumber=chapter["chapter_number"],
                 story=StoryMock(name=chapter["story__name"], slug=chapter["story__slug"]),
             )
-            ChapterService().updateOrCreateBannerFromChapter(chapterMap, user)
+            chapterService.updateOrCreateBannerFromChapter(chapterMap, user)
 
         print(f"Update banner type={BannerTypeEnum.CHAPTER} successfully.")
 
