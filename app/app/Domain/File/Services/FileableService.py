@@ -103,8 +103,8 @@ class FileableService:
             "id": file.id,
             "original": fileUrl,
             "desktop": f"{fileUrl}?conversion=desktop",
-            "mobile": f"{fileUrl}?conversion=mobile",
-            "thumbnail": f"{fileUrl}?conversion=thumbnail",
+            # "mobile": f"{fileUrl}?conversion=mobile",
+            # "thumbnail": f"{fileUrl}?conversion=thumbnail",
             "collection_name": file.collection_name,
         }
 
@@ -122,15 +122,15 @@ class FileableService:
 
         originalPresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file)
         desktopPresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file, "desktop")
-        mobilePresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file, "mobile")
-        thumbnailPresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file, "thumbnail")
+        # mobilePresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file, "mobile")
+        # thumbnailPresignedUrl = cloudFrontService.getCloudFrontSignedUrl(file, "thumbnail")
 
         data = {
             "id": file.id,
             "original": originalPresignedUrl,
             "desktop": desktopPresignedUrl,
-            "mobile": mobilePresignedUrl,
-            "thumbnail": thumbnailPresignedUrl,
+            # "mobile": mobilePresignedUrl,
+            # "thumbnail": thumbnailPresignedUrl,
             "collection_name": file.collection_name,
         }
         seconds = int(settings.CACHE_PRESIGNED_URL_IN_SECONDS)

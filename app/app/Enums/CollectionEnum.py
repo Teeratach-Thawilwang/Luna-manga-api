@@ -7,31 +7,17 @@ from app.Enums.VideoMimeTypeEnum import VideoMimeTypeEnum
 class CollectionEnum:
     BANNER_STORY = {
         "mimetypes": ImageMimeTypeEnum.list(),
-        "conversion": {
-            "thumbnail": {
-                "width": 160,
-                "height": "auto",
-            },
-        },
+        "conversion": None,
     }
 
     BANNER_CHAPTER = {
         "mimetypes": ImageMimeTypeEnum.list(),
-        "conversion": {
-            "thumbnail": {
-                "width": 160,
-                "height": "auto",
-            },
-        },
+        "conversion": None,
     }
 
     BANNER_STORY_WINDOW_1 = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 200,
-                "height": 200,
-            },
             "desktop": {
                 "width": 1000,
                 "height": 1000,
@@ -42,10 +28,6 @@ class CollectionEnum:
     BANNER_STORY_WINDOW_2 = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 196,
-                "height": 94,
-            },
             "desktop": {
                 "width": 980,
                 "height": 470,
@@ -56,10 +38,6 @@ class CollectionEnum:
     BANNER_STORY_WINDOW_3 = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 196,
-                "height": 94,
-            },
             "desktop": {
                 "width": 980,
                 "height": 470,
@@ -70,10 +48,6 @@ class CollectionEnum:
     BANNER_ADVERTISEMENT_SMALL = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 196,
-                "height": 60,
-            },
             "desktop": {
                 "width": 980,
                 "height": 300,
@@ -84,10 +58,6 @@ class CollectionEnum:
     BANNER_ADVERTISEMENT_MEDIUM = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 200,
-                "height": 50,
-            },
             "desktop": {
                 "width": 1000,
                 "height": 250,
@@ -98,10 +68,6 @@ class CollectionEnum:
     BANNER_ADVERTISEMENT_GROUP = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 200,
-                "height": 36,
-            },
             "desktop": {
                 "width": 1000,
                 "height": 180,
@@ -112,10 +78,6 @@ class CollectionEnum:
     PROFILE_IMAGE = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 160,
-                "height": "auto",
-            },
             "desktop": {
                 "width": 1000,
                 "height": "auto",
@@ -125,31 +87,17 @@ class CollectionEnum:
 
     STORY_IMAGE = {
         "mimetypes": ImageMimeTypeEnum.list(),
-        "conversion": {
-            "thumbnail": {
-                "width": 160,
-                "height": "auto",
-            },
-        },
+        "conversion": None,
     }
 
     CHAPTER_COVER_IMAGE = {
         "mimetypes": ImageMimeTypeEnum.list(),
-        "conversion": {
-            "thumbnail": {
-                "width": 160,
-                "height": "auto",
-            },
-        },
+        "conversion": None,
     }
 
     CATEGORY_IMAGE = {
         "mimetypes": ImageMimeTypeEnum.list(),
         "conversion": {
-            "thumbnail": {
-                "width": 160,
-                "height": "auto",
-            },
             "desktop": {
                 "width": 1000,
                 "height": "auto",
