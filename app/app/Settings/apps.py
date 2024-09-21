@@ -36,7 +36,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
+    "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
     "app.Middlewares.RequestParserMiddleware.RequestParserMiddleware",
 ]
 
