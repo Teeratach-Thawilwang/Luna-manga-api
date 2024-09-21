@@ -1,8 +1,15 @@
+import json
+
+from django.conf import settings
+from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
+from rest_framework import status, viewsets
+
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.File.Services.FileService import FileService
 from app.Enums.CollectionEnum import CollectionEnum
-from app.Enums.EventEnum import EventEnum
-from app.Event.Event import Event
 from app.Exceptions.CollectionInvalidException import CollectionInvalidException
 from app.Exceptions.PermissionException import PermissionException
 from app.Http.Requests.Store.FileController.ShowRequest import ShowRequest
@@ -10,12 +17,6 @@ from app.Http.Requests.Store.FileController.StoreRequest import StoreRequest
 from app.Http.Resources.Backoffice.FileController.FileResource import FileResource
 from app.Middlewares.AuthenticationMiddleware import AuthenticationMiddleware
 from app.Providers.CloudFrontService import CloudFrontService
-from django.conf import settings
-from django.shortcuts import redirect
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
-from rest_framework import status, viewsets
 
 
 class FileController(viewsets.ModelViewSet):
@@ -33,23 +34,18 @@ class FileController(viewsets.ModelViewSet):
         if customer == None:
             raise PermissionException({"message": "You have no permission."})
 
-        params = request.params
+        params: dict = request.params
         uploadFile = params["file"][0]
         collection = CollectionEnum().get(params["collection_name"])
 
         if collection is None:
             raise CollectionInvalidException({"message": "Collection Not Found."})
 
-        file = FileService().create(uploadFile, collection)
-        extension = "." + uploadFile.name.split(".")[-1]
-        uploadFile.name = file.uuid + extension
+        fileService = FileService()
+        file = fileService.create(uploadFile, collection)
 
-        uploadParams = {
-            "file": file,
-            "uploadFile": uploadFile,
-            "collection": collection,
-        }
-        Event(EventEnum.UPLOAD_FILE, uploadParams)
+        isSync = json.loads(params.get("is_sync", "True").lower())
+        fileService.uploadFileToStorage(file, uploadFile, collection, isSync)
 
         return FileResource(file, status=status.HTTP_201_CREATED)
 
