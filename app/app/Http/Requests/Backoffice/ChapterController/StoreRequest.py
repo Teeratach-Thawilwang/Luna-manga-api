@@ -1,9 +1,10 @@
+from rest_framework import serializers
+
 from app.Domain.Chapter.Models.Chapter import Chapter
 from app.Domain.Story.Models.Story import Story
 from app.Enums.CategoryEnum import CategoryEnum
 from app.Enums.StatusEnum import ChapterStatusEnum
 from app.Exceptions.ValidationException import ValidationException
-from rest_framework import serializers
 
 
 class StoreRequest:
@@ -20,7 +21,7 @@ class Validator(serializers.Serializer):
         self.fields["chapter_number"] = serializers.IntegerField(required=True)
         self.fields["type"] = serializers.ChoiceField(CategoryEnum.list(), required=True)
         self.fields["status"] = serializers.ChoiceField(ChapterStatusEnum.list(), required=True)
-        self.fields["text"] = serializers.CharField(required=True)
+        self.fields["text"] = serializers.CharField(required=True, allow_null=True)
         self.fields["cover_image_id"] = serializers.IntegerField(required=True)
 
         super().__init__(instance, data, **kwargs)
