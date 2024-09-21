@@ -1,3 +1,4 @@
+from django.db.models.query import QuerySet
 from django.http import JsonResponse
 
 from app.Domain.Chapter.Models.Chapter import Chapter
@@ -11,7 +12,8 @@ class ChapterResource(JsonResponse):
     def __init__(self, chapter: Chapter, customer: Customer, status=200, safe=False, json_dumps_params=None, **kwargs):
         fileableService = FileableService()
         chapterService = ChapterService()
-        chapter = chapter.prefetch_related("fileable__file", "story__chapter")
+        chapter: QuerySet[Chapter] = chapterService.findBy({"id": chapter.id})
+        chapter = chapter.prefetch_related("fileable__file", "story__chapter_set")[0]
         fileables = chapter.fileable.all()
         self.data = {
             "id": chapter.id,
