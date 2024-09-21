@@ -4,6 +4,7 @@ import uuid
 from typing import Any, BinaryIO, TextIO
 
 import magic
+import requests
 from django.db.models import Q
 from django.db.models.query import QuerySet
 
@@ -14,6 +15,7 @@ from app.Enums.ImageMimeTypeEnum import ImageMimeTypeEnum
 from app.Event.Event import Event
 from app.Exceptions.CollectionInvalidException import CollectionInvalidException
 from app.Exceptions.ResourceNotFoundException import ResourceNotFoundException
+from app.Providers.CloudFrontService import CloudFrontService
 from app.Providers.StorageManager import StorageManager
 from app.Services.ConversionService import ConversionService
 from app.Services.Paginator import paginate
@@ -132,8 +134,11 @@ class FileService:
         return uploadFile
 
     def loadTextFile(self, file: File) -> str:
-        response = StorageManager(file).download(None)
-        return response.read().decode("utf-8")
+        presignedUrl = CloudFrontService().getCloudFrontSignedUrl(file)
+        response = requests.get(presignedUrl)
+        if response.status_code != 200:
+            return "[{'type': 'text', 'children': [{'text': 'ข้อมูลมีปัญหา โปรดแจ้งแอดมิน'}], 'fontSize': 18, 'fontFamily': 'Sans-serif', 'align': 'left'}]"
+        return response.content.decode("utf-8")
 
     def createUploadFileFromText(self, text: str, filename: str):
         uploadFile = io.StringIO(text)

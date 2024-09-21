@@ -269,7 +269,9 @@ class ChapterService:
             case ChapterStatusEnum.INACTIVE:
                 return BannerStatusEnum.INACTIVE
 
-    def createFileableForChapter(self, chapterId: int, chapterText: str):
+    def createFileableForChapter(self, chapterId: int, chapterText: str | None):
+        if chapterText == None:
+            return
         fileIds = self.getFileIdsFromChapterText(chapterText)
         FileableService().syncFileableByFileIds(chapterId, "chapter", fileIds)
 
@@ -313,7 +315,7 @@ class ChapterService:
         return FileableService().findBy(params).first()
 
     def createOrUpdateTextFile(self, chapter: Chapter, chapterText: str):
-        fileable = self.getChapterFileable(chapter.id, CollectionNameEnum.DOCUMENT)
+        fileable = self.getChapterFileable(chapter, CollectionNameEnum.DOCUMENT)
         collection = CollectionEnum().get(CollectionNameEnum.DOCUMENT)
         if fileable == None:
             filename = f"chapter-id-{chapter.id}.txt"
@@ -324,6 +326,6 @@ class ChapterService:
 
         FileableService().syncSingleFileable(chapter.id, "chapter", fileId, CollectionNameEnum.DOCUMENT)
 
-    def loadChapterTextFromStorage(self, id: int):
-        fileable = self.getChapterFileable(id, CollectionNameEnum.DOCUMENT)
+    def loadChapterTextFromStorage(self, chapter: Chapter):
+        fileable = self.getChapterFileable(chapter, CollectionNameEnum.DOCUMENT)
         return FileService().loadTextFile(fileable.file)

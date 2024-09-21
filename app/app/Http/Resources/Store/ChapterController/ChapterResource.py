@@ -12,6 +12,7 @@ class ChapterResource(JsonResponse):
     def __init__(self, chapter: Chapter, customer: Customer, status=200, safe=False, json_dumps_params=None, **kwargs):
         fileableService = FileableService()
         chapterService = ChapterService()
+        chapterText = chapter.text
         chapter: QuerySet[Chapter] = chapterService.findBy({"id": chapter.id})
         chapter = chapter.prefetch_related("fileable__file", "story__chapter_set")[0]
         fileables = chapter.fileable.all()
@@ -19,7 +20,7 @@ class ChapterResource(JsonResponse):
             "id": chapter.id,
             "story_name": chapter.story.name,
             "type": chapter.type,
-            "text": chapter.text,
+            "text": chapterText,
             "images": fileableService.transformImagesByCollection(fileables, CollectionNameEnum.STORY_IMAGE, "store"),
             "audio": fileableService.transformAudioByCollection(fileables, CollectionNameEnum.CHAPTER_AUDIO, "store"),
             "reaction": chapterService.transformReactionByChapterAndCustomer(chapter, customer),
