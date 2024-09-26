@@ -27,12 +27,13 @@ class BookmarkCollectionResource(JsonResponse):
             )
             .all()
         )
+        bookmarkStoriesLikeSum = bookmarkStories.annotate(like__sum=Sum("story__storyreaction__like"))
         bookmarkStories = bookmarkStories.annotate(sum_view_count=Sum("story__chapter__view_count"))
-        bookmarkStories = bookmarkStories.annotate(like__sum=Sum("story__storyreaction__like"))
 
-        for bookmark in bookmarkStories:
+        for i in range(len(bookmarkStories)):
+            bookmark = bookmarkStories[i]
             story: Story = bookmark.story
-            setattr(story, "like__sum", bookmark.like__sum)
+            setattr(story, "like__sum", bookmarkStoriesLikeSum[i].like__sum)
             data.append(
                 {
                     "id": story.id,
