@@ -7,7 +7,7 @@
     - รันคำสั่งบน cmd => wsl --shutdown
     - จากนั้น docker desktop จะให้ restart
 
-- เมื่อรัน docker-compose up เเล้วจะเชื่อมต่อไปยัง database จะต้องใช้ HOST ip address จาก wls หาได้จากคำสั่ง wsl hostname -I
+- เมื่อรัน docker-compose up เเล้วจะเชื่อมต่อไปยัง database จะต้องใช้ HOST ip address จาก wsl หาได้จากคำสั่ง wsl hostname -I
 
 - รัน mode replica
     - docker-compose --compatibility up -d
