@@ -1,7 +1,7 @@
 configurations = [
     {
         "key": "customer_register_confirm_email_link",
-        "value": "http://luna-manga.com/confirm-email",
+        "value": "https://www.luna-manga.com/confirm-email",
     },
     {
         "key": "customer_register_confirm_email_secret",
@@ -9,7 +9,7 @@ configurations = [
     },
     {
         "key": "customer_reset_password_link",
-        "value": "http://luna-manga.com/reset-password",
+        "value": "https://www.luna-manga.com/reset-password",
     },
     {
         "key": "customer_reset_password_secret",
