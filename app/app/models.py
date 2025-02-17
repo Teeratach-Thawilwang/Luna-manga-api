@@ -14,6 +14,7 @@ from app.Domain.Configuration.Models.Configuration import Configuration
 from app.Domain.Customer.Models.Customer import Customer
 from app.Domain.CustomerGroup.Models.CustomerGroup import CustomerGroup
 from app.Domain.CustomerReport.Models.CustomerReport import CustomerReport
+from app.Domain.CustomerTracking.Models.CustomerTracking import CustomerTracking
 from app.Domain.File.Models.File import File
 from app.Domain.File.Models.Fileable import Fileable
 from app.Domain.Post.Models.Post import Post

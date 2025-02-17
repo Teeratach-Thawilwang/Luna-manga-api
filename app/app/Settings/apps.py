@@ -38,6 +38,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "app.Middlewares.ExceptionMiddleware.ExceptionMiddleware",
     "app.Middlewares.RequestParserMiddleware.RequestParserMiddleware",
+    "app.Middlewares.CustomerTrackingMiddleware.CustomerTrackingMiddleware",
 ]
 
 if APP_ENV == "dev":
