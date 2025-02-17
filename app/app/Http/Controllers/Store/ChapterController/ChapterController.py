@@ -22,6 +22,7 @@ class ChapterController(viewsets.ModelViewSet):
 
     def show(self, request, slug, number):
         customer: Customer | None = request.user
+
         params = {
             "story__slug": slug,
             "chapter_number": number,
@@ -32,6 +33,9 @@ class ChapterController(viewsets.ModelViewSet):
         chapter: Chapter = chapterService.findBy(params).first()
         if chapter == None:
             raise ResourceNotFoundException({"message": "Chapter does not exist."})
+
+        if customer is None:
+            return ChapterResource(chapter, customer, isEmpty=True, status=status.HTTP_200_OK)
 
         chapter = chapterService.update(chapter.id, {"view_count": chapter.view_count + 1})
         chapterService.setViewCountCacheByChapter(chapter)
@@ -45,6 +49,6 @@ class ChapterController(viewsets.ModelViewSet):
         if chapter.type == CategoryEnum.NOVEL:
             chapter.text = chapterService.loadChapterTextFromStorage(chapter)
 
-        response = ChapterResource(chapter, customer, status=status.HTTP_200_OK)
+        response = ChapterResource(chapter, customer, isEmpty=False, status=status.HTTP_200_OK)
         setCache(key, response, settings.CACHE_PAGE_IN_SECONDS)
         return response
