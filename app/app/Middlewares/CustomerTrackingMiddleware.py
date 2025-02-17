@@ -13,8 +13,11 @@ def CustomerTrackingMiddleware(next):
             return next(request, *args, **kwargs)
 
         bearerToken = request.headers.get("Authorization", None).split()[1]
-        token = OAuthAccessTokenService().getByToken(bearerToken)
-        owner = token.owner()
+        try:
+            token = OAuthAccessTokenService().getByToken(bearerToken)
+            owner = token.owner()
+        except:
+            return next(request, *args, **kwargs)
 
         if isinstance(owner, Customer):
             params = {
